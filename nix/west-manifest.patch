@@ -1,0 +1,17 @@
+diff --git a/src/west/manifest.py b/src/west/manifest.py
+index e28fade..f3d3784 100644
+--- a/src/west/manifest.py
++++ b/src/west/manifest.py
+@@ -1618,8 +1618,10 @@ class Manifest:
+         '''
+         def pdict(p):
+             if not p.is_cloned():
+-                raise RuntimeError(f'cannot freeze; project {p.name} '
+-                                   'is uncloned')
++                # For the purposes of exporting a frozen manifest for Nix, this
++                # is sufficient, as a package whose revision is not represented
++                # as a SHA will fail the prefetch.
++                return Project.as_dict(p)
+             try:
+                 sha = p.sha(QUAL_MANIFEST_REV_BRANCH)
+             except subprocess.CalledProcessError as e:
