@@ -23,10 +23,24 @@ CONFIG_BT_DIS_PNP_VID=0x16c0
 CONFIG_BT_DIS_MANUF="MoErgo"
 CONFIG_BT_DIS_MODEL="Glove80"
 
+### Bluetooth configuration workarounds
+
+# Use higher radio transmit power
 CONFIG_BT_CTLR_TX_PWR_PLUS_8=y
 
 # Work-around for Windows bug with battery notifications
 CONFIG_BT_GATT_ENFORCE_SUBSCRIPTION=n
+
+# Allow unauthenticated re-pairing for already paired hosts. This would permit
+# an attacker that can spoof the host's peer address to "steal" the keyboard
+# pairing by overwriting it, but without access to the previous keys it can't
+# establish a MITM, and the sudden loss of the keyboard would be very obvious to
+# the previously-connected host.
+CONFIG_BT_SMP_ALLOW_UNAUTH_OVERWRITE=y
+CONFIG_ZMK_BLE_PASSKEY_ENTRY=n
+
+# Fetch peripheral battery level for status display reporting
+CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING=y
 
 # Enable MPU
 CONFIG_ARM_MPU=y
@@ -52,6 +66,9 @@ CONFIG_CLOCK_CONTROL_NRF_K32SRC_XTAL=y
 
 # Enable RGB underglow
 CONFIG_ZMK_RGB_UNDERGLOW=y
+
+# disable EXT_POWER until underglow gets turned on
+CONFIG_ZMK_EXT_POWER_START=n
 
 CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER=y
 CONFIG_ZMK_RGB_UNDERGLOW_ON_START=n
@@ -80,6 +97,10 @@ CONFIG_ZMK_BACKLIGHT_AUTO_OFF_USB=y
 # operating systems, most notably macOS. Use the more basic single-byte usage
 # space.
 CONFIG_ZMK_HID_CONSUMER_REPORT_USAGES_BASIC=y
+
+# Enable USB boot protocol support
+CONFIG_ZMK_USB_BOOT=y
+CONFIG_ZMK_HID_INDICATORS=y
 
 # Turn on debugging to disable optimization. Debug messages can result in larger
 # stacks, so enable stack protection and particularly a larger BLE peripheral stack.
