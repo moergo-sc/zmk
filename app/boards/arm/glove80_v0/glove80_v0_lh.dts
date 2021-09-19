@@ -4,23 +4,24 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "glove80.dtsi"
-#include "glove80_lh-pinctrl.dtsi"
-
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
 #include <dt-bindings/led/led.h>
+#include "glove80_v0.dtsi"
+#include "glove80_v0_lh-pinctrl.dtsi"
 
 / {
-    model = "glove80_lh";
-    compatible = "glove80_lh";
+    model = "glove80_v0_lh";
+    compatible = "glove80_v0_lh";
 
     chosen {
         zmk,underglow = &led_strip;
-        zmk,backlight = &back_led_backlight;
+        zmk,backlight = &power_led_backlight;
         zmk,battery   = &vbatt;
         zmk,underglow-indicators = &underglow_indicators;
     };
 
-    back_led_backlight: pwmleds {
+    power_led_backlight: pwmleds {
         compatible = "pwm-leds";
         pwm_led_0 {
             pwms = <&pwm0 0 PWM_USEC(20) PWM_POLARITY_NORMAL>;
@@ -30,11 +31,18 @@
     // Node name must match original "EXT_POWER" label to preserve user settings.
     EXT_POWER {
         compatible = "zmk,ext-power-generic";
-        control-gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>; /* WS2812_CE */
-        init-delay-ms = <100>;
+        control-gpios = <&gpio0 30 GPIO_ACTIVE_HIGH>; /**[SC] WS2812_CE */
+        init-delay-ms = <10>;
     };
 
-    vbatt: vbatt {
+    vbatt: vbatt-divider {
+        compatible = "zmk,battery-voltage-divider";
+        io-channels = <&adc 5>;
+        output-ohms = <820000>; /** Double check that this is right */
+        full-ohms = <(1500000 + 820000)>;
+    };
+
+    vbatt-vddh {
         compatible = "zmk,battery-nrf-vddh";
     };
 
@@ -65,23 +73,24 @@
     };
 };
 
-&spi3 {
+&spi1 {
     compatible = "nordic,nrf-spim";
+    /* Cannot be used together with i2c0. */
     status = "okay";
+    // Unused pins, needed for SPI definition, but not used by the ws2812 driver itself.
 
-    pinctrl-0 = <&spi3_default>;
-    pinctrl-1 = <&spi3_sleep>;
+    pinctrl-0 = <&spi1_default>;
+    pinctrl-1 = <&spi1_sleep>;
     pinctrl-names = "default", "sleep";
-
     led_strip: ws2812@0 {
         compatible = "worldsemi,ws2812-spi";
 
         /* SPI */
         reg = <0>; /* ignored, but necessary for SPI bindings */
-        spi-max-frequency = <4000000>;
+        spi-max-frequency = <2000000>;
 
         /* WS2812 */
-        chain-length = <40>; /* 40 keys have underglow at the moment */
+        chain-length = <40>; /* 18 keys have underglow at the moment */
         spi-one-frame = <0x70>;
         spi-zero-frame = <0x40>;
 
@@ -96,6 +105,8 @@
     pinctrl-names = "default", "sleep";
 };
 
+
+// [SC] Not sure if this section is necessary
 &uart0 {
     compatible = "nordic,nrf-uarte";
     pinctrl-0 = <&uart0_default>;
@@ -105,20 +116,20 @@
 
 &kscan0 {
     row-gpios
-        = <&gpio0 26 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH ROW1
-        , <&gpio0 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH ROW2
-        , <&gpio0 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH ROW3
-        , <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH ROW4
-        , <&gpio0 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH ROW5
-        , <&gpio1 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH ROW6
+        = <&gpio0 26 GPIO_ACTIVE_HIGH> // LH ROW1
+        , <&gpio0 5 GPIO_ACTIVE_HIGH> // LH ROW2
+        , <&gpio0 7 GPIO_ACTIVE_HIGH> // LH ROW3
+        , <&gpio1 8 GPIO_ACTIVE_HIGH> // LH ROW4
+        , <&gpio0 11 GPIO_ACTIVE_HIGH> // LH ROW5
+        , <&gpio0 12 GPIO_ACTIVE_HIGH> // LH ROW6
         ;
     col-gpios
-        = <&gpio1 8 GPIO_ACTIVE_HIGH> // LH COL6
-        , <&gpio1 4 GPIO_ACTIVE_HIGH> // LH COL5
-        , <&gpio1 6 GPIO_ACTIVE_HIGH> // LH COL4
-        , <&gpio1 7 GPIO_ACTIVE_HIGH> // LH COL3
-        , <&gpio1 5 GPIO_ACTIVE_HIGH> // LH COL2
-        , <&gpio1 3 GPIO_ACTIVE_HIGH> // LH COL1
-        , <&gpio1 1 GPIO_ACTIVE_HIGH> // LH Thumb
+        = <&gpio1 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH COL6
+        , <&gpio1 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH COL5
+        , <&gpio1 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH COL4
+        , <&gpio1 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH COL3
+        , <&gpio1 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH COL2
+        , <&gpio1 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH COL1
+        , <&gpio0 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // LH Thumb
         ;
 };
