@@ -17,6 +17,7 @@
         zmk,underglow = &led_strip;
         zmk,backlight = &back_led_backlight;
         zmk,battery   = &vbatt;
+        zmk,underglow-indicators = &underglow_indicators;
     };
 
     back_led_backlight: pwmleds {
@@ -35,6 +36,31 @@
 
     vbatt: vbatt {
         compatible = "zmk,battery-nrf-vddh";
+    };
+
+    /*
+      MoErgo 40 LEDs
+
+      34 28 22 16 10
+      35 29 23 17 11 6
+      36 30 24 18 12 7
+      37 31 25 19 13 8
+      38 32 26 20 14 9
+      39 33 27 21 15
+                    0 1 2
+                    3 4 5
+    */
+    underglow_indicators: underglow-indicators {
+        compatible  = "zmk,underglow-indicators";
+        layer-state = <35 29 23 17 11 6>;
+        bat-lhs     = <36 30 24 18 12 7>;
+        bat-rhs     = <37 31 25 19 13 8>;
+        capslock    = <22>;
+        numlock     = <16>;
+        scrolllock  = <10>;
+        ble-state   = <3 4 0 1>;
+        usb-state   = <5>;
+        output-fallback = <15>;
     };
 
     glove80_ext: connector {
