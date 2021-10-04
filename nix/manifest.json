@@ -1,0 +1,269 @@
+[
+  {
+    "clone-depth": 1,
+    "name": "zephyr",
+    "revision": "ed4a9549efc6fe6e4ab15ae19d32a9405b54f4bb",
+    "url": "https://github.com/zmkfirmware/zephyr",
+    "west-commands": "scripts/west-commands.yml",
+    "sha256": "14np1cx6rpaxmpnclaqsn8jcdb74jmhx0c231d2vs47crg59pyr1"
+  },
+  {
+    "name": "canopennode",
+    "path": "modules/lib/canopennode",
+    "revision": "53d3415c14d60f8f4bfca54bfbc5d5a667d7e724",
+    "url": "https://github.com/zephyrproject-rtos/canopennode",
+    "sha256": "1vqrx1zi2wbvnwza4z39nrd33j9dxpp9j9rnn12r1gdwxfjazbw0"
+  },
+  {
+    "name": "chre",
+    "path": "modules/lib/chre",
+    "revision": "ef76d3456db07e4959df555047d6962279528c8d",
+    "url": "https://github.com/zephyrproject-rtos/chre",
+    "sha256": "00jnv58slzgp4srmsamd7x34yf0hj1c6agmws4csv7w28013bwfm"
+  },
+  {
+    "name": "cmsis",
+    "path": "modules/hal/cmsis",
+    "revision": "093de61c2a7d12dc9253daf8692f61f793a9254a",
+    "url": "https://github.com/zephyrproject-rtos/cmsis",
+    "sha256": "0354fz5lb2vg3zj0ciwjmz4slh3s5rnvkmixikn36m51wk8vcq1j"
+  },
+  {
+    "name": "fatfs",
+    "path": "modules/fs/fatfs",
+    "revision": "a30531af3a95a9a3ea7d771ea8a578ebfed45514",
+    "url": "https://github.com/zephyrproject-rtos/fatfs",
+    "sha256": "04c33x1am766sdszmsmxd2rii6snyld68ca17qhg3ml2xiqy1z31"
+  },
+  {
+    "name": "fff",
+    "path": "modules/lib/fff",
+    "revision": "6ce5ba26486e93d5b7696a3e23f0585932c14b16",
+    "url": "https://github.com/zephyrproject-rtos/fff",
+    "sha256": "1wwrsicibk5nrzj7arxd4a22qr596vnc1ygp9zi409ygqvmzayzy"
+  },
+  {
+    "name": "hal_atmel",
+    "path": "modules/hal/atmel",
+    "revision": "1d237f2e2f262751975b6da6e03af569b2b49b2b",
+    "url": "https://github.com/zephyrproject-rtos/hal_atmel",
+    "sha256": "1p5qbcqn8adf7jrrpkkc6wjfxmdg9nan370r3pgsamgasyg2h31l"
+  },
+  {
+    "name": "hal_gigadevice",
+    "path": "modules/hal/gigadevice",
+    "revision": "dd0e0322474462b58059e6fedaf1d67d2a0864d0",
+    "url": "https://github.com/zephyrproject-rtos/hal_gigadevice",
+    "sha256": "0lqx861f39wkf26n9n0bxa3mlfx6l2idjg69hyi6g6b3xlqmnyh2"
+  },
+  {
+    "name": "hal_nordic",
+    "path": "modules/hal/nordic",
+    "revision": "249199ec5a5c31d170659921048764e96d05cc0e",
+    "url": "https://github.com/zephyrproject-rtos/hal_nordic",
+    "sha256": "1qiqw0hi3lvfgwl1g5phpzc2j2gvj3ccyrvxw3mvgnbvkvvliv2j"
+  },
+  {
+    "name": "hal_nuvoton",
+    "path": "modules/hal/nuvoton",
+    "revision": "b4d31f33238713a568e23618845702fadd67386f",
+    "url": "https://github.com/zephyrproject-rtos/hal_nuvoton",
+    "sha256": "0942ainpvf64878vkwh9sx4bgwzmf98d40wqa125qmczlbb0d7my"
+  },
+  {
+    "name": "hal_quicklogic",
+    "path": "modules/hal/quicklogic",
+    "revision": "b3a66fe6d04d87fd1533a5c8de51d0599fcd08d0",
+    "url": "https://github.com/zephyrproject-rtos/hal_quicklogic",
+    "sha256": "0hk1x72kibaw3xkspy9822vh28ax3bk11b80qn8l4dwrm0wx34sy"
+  },
+  {
+    "name": "hal_renesas",
+    "path": "modules/hal/renesas",
+    "revision": "468d3f2146d18c7f86a4640fc641cc1d20a4a100",
+    "url": "https://github.com/zephyrproject-rtos/hal_renesas",
+    "sha256": "10wk12myrz1rd6vyxbk4cfm7sj44ad4j7f49x043lfsma60ss402"
+  },
+  {
+    "name": "hal_rpi_pico",
+    "path": "modules/hal/rpi_pico",
+    "revision": "a094c060e0c2d43c7f9d8f5c06cc0665117e0c18",
+    "url": "https://github.com/zephyrproject-rtos/hal_rpi_pico",
+    "sha256": "0lxf3d0fanzhwzg68scqzyyv70gwg94gzpc4cx7kxic228832v8v"
+  },
+  {
+    "name": "hal_stm32",
+    "path": "modules/hal/stm32",
+    "revision": "642e199c59828137dc6b1c7044a289d4269886d1",
+    "url": "https://github.com/zephyrproject-rtos/hal_stm32",
+    "sha256": "1lp54hxcq1wazh2ls2hk3nmshssl4ia857i4qgw7nf3l0a5zw4ia"
+  },
+  {
+    "name": "hal_telink",
+    "path": "modules/hal/telink",
+    "revision": "38573af589173259801ae6c2b34b7d4c9e626746",
+    "url": "https://github.com/zephyrproject-rtos/hal_telink",
+    "sha256": "16lzqnzwl2ij0jvbg9x1cgh54kv76dbmpcn4xhd5m4wph3yix78z"
+  },
+  {
+    "name": "hal_wurthelektronik",
+    "path": "modules/hal/wurthelektronik",
+    "revision": "24ca9873c3d608fad1fea0431836bc8f144c132e",
+    "url": "https://github.com/zephyrproject-rtos/hal_wurthelektronik",
+    "sha256": "0s2b3j40b7qd85np46n4vh0zjmwymnpxd8r42nhss6xznn11g2h8"
+  },
+  {
+    "name": "libmetal",
+    "path": "modules/hal/libmetal",
+    "revision": "2f586b4f1276fb075ee145421bdf6cbe5403aa41",
+    "url": "https://github.com/zephyrproject-rtos/libmetal",
+    "sha256": "1r0k3yxa50x0627fr61k6ahmfwyjg9zqiagfjv62a8jpwc134mw4"
+  },
+  {
+    "name": "liblc3",
+    "path": "modules/lib/liblc3",
+    "revision": "448f3de31f49a838988a162ef1e23a89ddf2d2ed",
+    "url": "https://github.com/zephyrproject-rtos/liblc3",
+    "sha256": "07r923k1y05sq1sl9740z33cz64pqm2n7x8rr2ws460fij64aixp"
+  },
+  {
+    "name": "littlefs",
+    "path": "modules/fs/littlefs",
+    "revision": "ca583fd297ceb48bced3c2548600dc615d67af24",
+    "url": "https://github.com/zephyrproject-rtos/littlefs",
+    "sha256": "10xpjrnp5n1j1xbay2qwmg2w314fw9pgzv3kz1mn3pgadhckfgdn"
+  },
+  {
+    "name": "lvgl",
+    "path": "modules/lib/gui/lvgl",
+    "revision": "70a7849726be8375e3d941153dc417823ea7f355",
+    "url": "https://github.com/zmkfirmware/lvgl",
+    "sha256": "147mykkb72nwbjhrw4z7h0kkxw4p7kvy0w001s44rgplxhqqsg98"
+  },
+  {
+    "name": "lz4",
+    "path": "modules/lib/lz4",
+    "revision": "8e303c264fc21c2116dc612658003a22e933124d",
+    "url": "https://github.com/zephyrproject-rtos/lz4",
+    "sha256": "1kqs7gxg17gvws01rir8p6gmzp54y12s1898lflhsb418122v8nf"
+  },
+  {
+    "name": "mbedtls",
+    "path": "modules/crypto/mbedtls",
+    "revision": "7fed49c9b9f983ad6416986661ef637459723bcb",
+    "url": "https://github.com/zephyrproject-rtos/mbedtls",
+    "sha256": "084m54xgqqqfixj7h9zigh98l06c2g5ybwbs6y7yji22x0v5dx7f"
+  },
+  {
+    "name": "mipi-sys-t",
+    "path": "modules/debug/mipi-sys-t",
+    "revision": "0d521d8055f3b2b4842f728b0365d3f0ece9c37f",
+    "url": "https://github.com/zephyrproject-rtos/mipi-sys-t",
+    "sha256": "05yl16qbnj1xxngdyisd5c25aa88zgi6wd5ylqsgz419l0zrgrm6"
+  },
+  {
+    "name": "nanopb",
+    "path": "modules/lib/nanopb",
+    "revision": "dc4deed54fd4c7e1935e3b6387eedf21bb45dc38",
+    "url": "https://github.com/zephyrproject-rtos/nanopb",
+    "sha256": "0kmzh65hyhnl88w9x0rcdypj4nl1brbxrnzhy3flgxmhr564y05s"
+  },
+  {
+    "name": "nrf_hw_models",
+    "path": "modules/bsim_hw_models/nrf_hw_models",
+    "revision": "65bc5305d432c08e24a3f343006d1e7deaff4908",
+    "url": "https://github.com/zephyrproject-rtos/nrf_hw_models",
+    "sha256": "12xzqk22zc4g0j3xcmnz00c56pk6hiydsfgnh7gqm2ap2q3p90zm"
+  },
+  {
+    "name": "open-amp",
+    "path": "modules/lib/open-amp",
+    "revision": "8d53544871e1f300c478224faca6be8384ab0d04",
+    "url": "https://github.com/zephyrproject-rtos/open-amp",
+    "sha256": "00lynjr3vj8a3gj3vh557gjwp7v7kzj7py0vxwvq8y349kh1ga50"
+  },
+  {
+    "name": "picolibc",
+    "path": "modules/lib/picolibc",
+    "revision": "04ada5951cbaf8e7b17f8226ce31cb6837c28ba7",
+    "url": "https://github.com/zephyrproject-rtos/picolibc",
+    "sha256": "0sv6hv1bfcc7ys310bgifq7jk3r5zlq866wiq6qklmysjgrhva5h"
+  },
+  {
+    "name": "segger",
+    "path": "modules/debug/segger",
+    "revision": "d4e568a920b4bd087886170a5624c167b2d0665e",
+    "url": "https://github.com/zephyrproject-rtos/segger",
+    "sha256": "0a1rk0b2l1n2zkhlp1ia4cy2mijiaynk6qirw1gddnryj4qqr0nq"
+  },
+  {
+    "name": "tflite-micro",
+    "path": "modules/lib/tflite-micro",
+    "revision": "9156d050927012da87079064db59d07f03b8baf6",
+    "url": "https://github.com/zephyrproject-rtos/tflite-micro",
+    "sha256": "1przq51rrhl032n831b2bl35f7kw22ypi9di2wxpfww5q4b6dbh1"
+  },
+  {
+    "name": "tinycbor",
+    "path": "modules/lib/tinycbor",
+    "revision": "9e1f34bc08123aaad7666d3652aaa839e8178b3b",
+    "url": "https://github.com/zephyrproject-rtos/tinycbor",
+    "sha256": "0yqmbiqx4www3rfc1ym42j8gqwi1b8hkw27gjps25xz22zrh4a1p"
+  },
+  {
+    "name": "tinycrypt",
+    "path": "modules/crypto/tinycrypt",
+    "revision": "3e9a49d2672ec01435ffbf0d788db6d95ef28de0",
+    "url": "https://github.com/zephyrproject-rtos/tinycrypt",
+    "sha256": "19d2q9y23yzz9i383q3cldjl3k5mryx9762cab23zy3ijdnmj2z6"
+  },
+  {
+    "name": "TraceRecorderSource",
+    "path": "modules/debug/TraceRecorder",
+    "revision": "9893bf1cf649a2c4ee2e27293f887994f3d0da5b",
+    "url": "https://github.com/zephyrproject-rtos/TraceRecorderSource",
+    "sha256": "00lghqq3n7qln6kq2ikwgswap62z81fqw0k28j975nnc1z932flg"
+  },
+  {
+    "name": "trusted-firmware-a",
+    "path": "modules/tee/tf-a/trusted-firmware-a",
+    "revision": "d29cddecde614d81cbec1fb0086cdaebd77d3575",
+    "url": "https://github.com/zephyrproject-rtos/trusted-firmware-a",
+    "sha256": "1xca872xx9wds8lgjxppg8zbcm01pf47al127hljkwzi6g4wcr69"
+  },
+  {
+    "name": "tf-m-tests",
+    "path": "modules/tee/tf-m/tf-m-tests",
+    "revision": "c99a86b295c4887520da9d8402566d7f225c974e",
+    "url": "https://github.com/zephyrproject-rtos/tf-m-tests",
+    "sha256": "0cc4029i9qfzq4vply9l2yjigaf9rq1zc6a44b8dc779kx31qx36"
+  },
+  {
+    "name": "psa-arch-tests",
+    "path": "modules/tee/tf-m/psa-arch-tests",
+    "revision": "f4fc2442b8e29e2a03d9899e46e5a3ea3df8c2c9",
+    "url": "https://github.com/zephyrproject-rtos/psa-arch-tests",
+    "sha256": "015qan6qfqyfc1lwpqb29zk1wxx02b6ng5wc1nfpfvknvhiwifay"
+  },
+  {
+    "name": "uoscore-uedhoc",
+    "path": "modules/lib/uoscore-uedhoc",
+    "revision": "e8920192b66db4f909eb9cd3f155d5245c1ae825",
+    "url": "https://github.com/zephyrproject-rtos/uoscore-uedhoc",
+    "sha256": "0ngs6ad6lm47gqy5i5h47cr4b7k3qb85cnbidkk1092xban0ai0g"
+  },
+  {
+    "name": "zcbor",
+    "path": "modules/lib/zcbor",
+    "revision": "a0d6981f14d4001d6f0d608d1a427f9bc6bb6d02",
+    "url": "https://github.com/zephyrproject-rtos/zcbor",
+    "sha256": "03xz79pi210kny55ks9cyr8i9m68f7kla3nv5zk2afg59ms0nwdc"
+  },
+  {
+    "name": "zscilib",
+    "path": "modules/lib/zscilib",
+    "revision": "ca070ddabdaf67175a2da901d0bd62e8899371c5",
+    "url": "https://github.com/zephyrproject-rtos/zscilib",
+    "sha256": "1ss33lfz2xzz8b3fcnibz109x09lj9ajw3na8lsmhvn7mhg6zh3v"
+  }
+]
