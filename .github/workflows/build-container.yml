@@ -1,0 +1,110 @@
+name: Build Compiler Service Container
+
+on:
+  push:
+    tags:
+      - "*"
+  pull_request_target:
+    branches:
+      - main
+
+jobs:
+  build:
+    # This job must never be run on a PR from outside the same repository
+    if: github.repository == 'moergo-sc/zmk' && (github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ECR_REPOSITORY: zmk-builder-lambda
+      VERSIONS_BUCKET: glove80firmwarepipelines-compilerversionsbucket44-zubaquiyjdam
+      UPDATE_COMPILER_VERSIONS_FUNCTION: arn:aws:lambda:us-east-1:431227615537:function:Glove80FirmwarePipelineSt-UpdateCompilerVersions2A-CNxPOHb4VSuV
+      REVISION_TAG: ${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha  }}
+      PR_NUMBER: ${{ github.event.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: moergo-sc/zmk
+          ref: ${{ github.event.pull_request && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::431227615537:role/GithubCompilerLambdaBuilder
+          aws-region: us-east-1
+      - name: Extract container name from branch name
+        shell: bash
+        run: |
+          if [ "$GITHUB_HEAD_REF" ]; then
+            branch_ref="$GITHUB_HEAD_REF"
+            type="pr"
+            tag="pr${PR_NUMBER}.${GITHUB_HEAD_REF}"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            branch_ref="$GITHUB_REF"
+            type="tag"
+            tag="${GITHUB_REF#refs/tags/}"
+          else
+            echo "Not a pull request or release tag" >&2
+            exit 1
+          fi
+          # Replace / with . in container tag names
+          tag="${tag//\//.}"
+          echo "VERSION_BRANCH=${branch_ref}" >> $GITHUB_ENV
+          echo "VERSION_TYPE=${type}" >> $GITHUB_ENV
+          echo "VERSION_NAME=${tag}" >> $GITHUB_ENV
+        id: extract_name
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-22.05
+      - uses: cachix/cachix-action@v15
+        with:
+          name: moergo-glove80-zmk-dev
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      - name: Build lambda image
+        run: nix-build release.nix --arg revision "\"${REVISION_TAG}\"" --arg firmwareVersion "\"${VERSION_NAME}\"" -A lambdaImage -o lambdaImage
+      - name: Import OCI image into docker-daemon
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: nix shell -f nix/pinned-nixpkgs.nix skopeo -c skopeo --insecure-policy copy oci:lambdaImage docker-daemon:$REGISTRY/$ECR_REPOSITORY:$REVISION_TAG
+      - name: Push container image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker push $REGISTRY/$ECR_REPOSITORY:$REVISION_TAG
+      - name: Create JSON metadata to represent the built container
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
+        run: |
+          digest="$(docker inspect --format='{{index .RepoDigests 0}}' $REGISTRY/$ECR_REPOSITORY:$REVISION_TAG)"
+          digest="${digest##*@}"
+          api_version="$(cat lambda/api_version.txt)"
+          timestamp="$(date -u +"%Y%m%d.%H%M%S")"
+
+          if [ "$VERSION_TYPE" = "pr" ]; then
+             release_name="$VERSION_NAME+$timestamp"
+          else
+             release_name="$VERSION_NAME"
+          fi
+
+          jq -n '$ARGS.named' \
+            --arg name         "$release_name" \
+            --arg version_name "$VERSION_NAME" \
+            --arg revision     "$REVISION_TAG" \
+            --arg release_time "$timestamp" \
+            --arg branch       "$VERSION_BRANCH" \
+            --arg digest       "$digest" \
+            --arg api_version  "$api_version" \
+            > "/tmp/$VERSION_NAME.json"
+      - name: Upload image metadata file to versions bucket
+        run: aws s3 cp "/tmp/$VERSION_NAME.json" "s3://$VERSIONS_BUCKET/images/$VERSION_NAME.json"
+      - name: Notify the build pipeline that the compile containers have updated
+        run: >-
+          aws lambda invoke --function-name $UPDATE_COMPILER_VERSIONS_FUNCTION
+          --invocation-type Event
+          --cli-binary-format raw-in-base64-out
+          /dev/null
