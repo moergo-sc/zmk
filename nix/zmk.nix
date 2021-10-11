@@ -4,6 +4,7 @@
 , board ? "glove80_lh"
 , shield ? null
 , keymap ? null
+, kconfig ? null
 }:
 
 
@@ -66,7 +67,9 @@ stdenvNoCC.mkDerivation {
         # Transient state
         relPath == "build" || relPath == ".west" ||
         # Fetched by west
-        relPath == "modules" || relPath == "tools" || relPath == "zephyr"
+        relPath == "modules" || relPath == "tools" || relPath == "zephyr" ||
+        # Not part of ZMK
+        relPath == "lambda" || relPath == ".github"
       );
     };
 
@@ -90,7 +93,8 @@ stdenvNoCC.mkDerivation {
     "-DZEPHYR_MODULES=${lib.concatStringsSep ";" zephyrModuleDeps}"
   ] ++
   (lib.optional (shield != null) "-DSHIELD=${shield}") ++
-  (lib.optional (keymap != null) "-DKEYMAP_FILE=${keymap}");
+  (lib.optional (keymap != null) "-DKEYMAP_FILE=${keymap}") ++
+  (lib.optional (kconfig != null) "-DCONF_FILE=${kconfig}");
 
   nativeBuildInputs = [ cmake ninja python dtc gcc-arm-embedded ];
   buildInputs = [ zephyr ];
