@@ -3,6 +3,8 @@
 with pkgs;
 let
   zmkPkgs = (import ./default.nix { inherit pkgs; });
+  lambda  = (import ./lambda { inherit pkgs; });
+
   inherit (zmkPkgs) zmk zephyr;
 
   baseImage = dockerTools.buildImage {
@@ -32,23 +34,44 @@ let
     contents = lib.singleton (referToPackages "deps-refs" (zmk.buildInputs ++ zmk.nativeBuildInputs ++ zmk.zephyrModuleDeps));
   };
 
-  compileScript = writeShellScriptBin "compileZmk" ''
-    set -euo pipefail
+  zmkCompileScript = writeShellScriptBin "compileZmk" ''
+    set -eo pipefail
+    if [ ! -f "$1" ]; then
+      echo "Usage: compileZmk [file.keymap]" >&2
+      exit 1
+    fi
+    KEYMAP="$(${pkgs.busybox}/bin/realpath $1)"
     export PATH=${lib.makeBinPath (with pkgs; zmk.nativeBuildInputs)}:$PATH
     export CMAKE_PREFIX_PATH=${zephyr}
-    cmake -G Ninja -S ${zmk.src}/app ${lib.escapeShellArgs zmk.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache"
+    cmake -G Ninja -S ${zmk.src}/app ${lib.escapeShellArgs zmk.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DKEYMAP_FILE=$KEYMAP"
     ninja
   '';
-in
-dockerTools.buildImage {
-  name = "zmk-builder";
-  tag = "latest";
-  fromImage = depsImage;
-  contents = [ compileScript pkgs.busybox ];
 
-  config = {
-    User = "deploy";
-    WorkingDir = "/data";
-    Cmd = [ compileScript ];
+  builderImage = dockerTools.buildImage {
+    name = "zmk-builder";
+    tag = "latest";
+    fromImage = depsImage;
+    contents = [ zmkCompileScript pkgs.busybox ];
   };
+
+  lambdaEntrypoint = writeShellScriptBin "lambdaEntrypoint" ''
+    set -euo pipefail
+    export PATH=${lib.makeBinPath [zmkCompileScript]}:$PATH
+    cd ${lambda.source}
+    ${lambda.bundleEnv}/bin/bundle exec aws_lambda_ric "app.LambdaFunction::Handler.process"
+  '';
+
+  lambdaImage = dockerTools.buildImage {
+    name = "zmk-builder-lambda";
+    tag = "latest";
+    fromImage = builderImage;
+    contents = [ lambdaEntrypoint ];
+    config = {
+      User = "deploy";
+      Cmd = [ "${lambdaEntrypoint}/bin/lambdaEntrypoint" ];
+    };
+
+  };
+in {
+  inherit builderImage lambdaImage zmkCompileScript lambdaEntrypoint;
 }
