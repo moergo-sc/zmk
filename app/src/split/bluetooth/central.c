@@ -1178,7 +1178,6 @@ static void split_central_update_layers_callback(struct k_work *work) {
             LOG_DBG("Sent Layers over to peripheral");
             raise_zmk_split_peripheral_layer_changed(
                 (struct zmk_split_peripheral_layer_changed){.layers = layers});
-
         }
     }
 }
