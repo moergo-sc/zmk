@@ -280,7 +280,7 @@ static int zmk_rgb_underglow_init(void) {
 #endif
 
     if (state.on) {
-        k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
+        k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(25));
     }
 
     return 0;
@@ -318,7 +318,7 @@ int zmk_rgb_underglow_on(void) {
 
     state.on = true;
     state.animation_step = 0;
-    k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
+    k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(25));
 
     return zmk_rgb_underglow_save_state();
 }
