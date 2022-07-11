@@ -1,9 +1,10 @@
 { pkgs ? import <nixpkgs> {} }:
 
-with pkgs;
 let
+  lib = pkgs.lib;
   zmkPkgs = (import ./default.nix { inherit pkgs; });
   lambda  = (import ./lambda { inherit pkgs; });
+  ccacheWrapper = pkgs.callPackage ./nix/ccache.nix {};
 
   nix-utils = pkgs.fetchFromGitHub {
     owner = "iknow";
@@ -39,31 +40,72 @@ let
 
   depsLayer = {
     name = "deps-layer";
+    path = [ pkgs.ccache ];
     includes = zmk.buildInputs ++ zmk.nativeBuildInputs ++ zmk.zephyrModuleDeps;
   };
 
-  zmkCompileScript = writeShellScriptBin "compileZmk" ''
+  zmkCompileScript = let
+    zmk' = zmk.override {
+      gcc-arm-embedded = ccacheWrapper.override {
+        unwrappedCC = pkgs.gcc-arm-embedded;
+      };
+    };
+  in pkgs.writeShellScriptBin "compileZmk" ''
     set -eo pipefail
+
     if [ ! -f "$1" ]; then
       echo "Usage: compileZmk [file.keymap]" >&2
       exit 1
     fi
+
     KEYMAP="$(${pkgs.busybox}/bin/realpath $1)"
-    export PATH=${lib.makeBinPath (with pkgs; zmk.nativeBuildInputs)}:$PATH
+    export PATH=${lib.makeBinPath (with pkgs; zmk'.nativeBuildInputs ++ [ ccache ])}:$PATH
     export CMAKE_PREFIX_PATH=${zephyr}
-    cmake -G Ninja -S ${zmk.src}/app ${lib.escapeShellArgs zmk.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DKEYMAP_FILE=$KEYMAP"
+
+    export CCACHE_BASEDIR=$PWD
+    export CCACHE_NOHASHDIR=t
+    export CCACHE_COMPILERCHECK=none
+
+    if [ -n "$DEBUG" ]; then ccache -z; fi
+
+    cmake -G Ninja -S ${zmk'.src}/app ${lib.escapeShellArgs zmk'.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DKEYMAP_FILE=$KEYMAP"
     ninja
+
+    if [ -n "$DEBUG" ]; then ccache -s; fi
+  '';
+
+  ccacheCache = pkgs.runCommandNoCC "ccache-cache" {
+    nativeBuildInputs = [ zmkCompileScript ];
+  } ''
+    export CCACHE_DIR=$out
+
+    mkdir /tmp/build
+    cd /tmp/build
+
+    compileZmk ${zmk.src}/app/boards/arm/glove80/glove80.keymap
   '';
 
   appLayer = {
     name = "app-layer";
-    path = [ zmkCompileScript ];
-    entries = ociTools.makeUserDirectoryEntries accounts "deploy" [
-      "/data"
-    ];
+    path = [ startLambda zmkCompileScript ];
   };
 
-  lambdaEntrypoint = writeShellScriptBin "lambdaEntrypoint" ''
+  entrypoint = pkgs.writeShellScriptBin "entrypoint" ''
+    set -euo pipefail
+
+    if [ ! -d "$CCACHE_DIR" ]; then
+      cp -r ${ccacheCache} "$CCACHE_DIR"
+      chmod -R u=rwX,go=u-w "$CCACHE_DIR"
+    fi
+
+    if [ ! -d /tmp/build ]; then
+      mkdir /tmp/build
+    fi
+
+    exec "$@"
+  '';
+
+  startLambda = pkgs.writeShellScriptBin "startLambda" ''
     set -euo pipefail
     export PATH=${lib.makeBinPath [ zmkCompileScript ]}:$PATH
     cd ${lambda.source}
@@ -75,11 +117,12 @@ let
     layers = [ baseLayer depsLayer appLayer ];
     config = {
       User = "deploy";
-      WorkingDir = "/data";
-      Cmd = [ "${lambdaEntrypoint}/bin/lambdaEntrypoint" ];
+      WorkingDir = "/tmp";
+      Entrypoint = [ "${entrypoint}/bin/entrypoint" ];
+      Cmd = [ "startLambda" ];
+      Env = [ "CCACHE_DIR=/tmp/ccache" ];
     };
-
   };
 in {
-  inherit lambdaImage zmkCompileScript lambdaEntrypoint;
+  inherit lambdaImage zmkCompileScript ccacheCache;
 }
