@@ -44,17 +44,18 @@ module LambdaFunction
       private
 
       def compile(keymap_data)
-        Dir.mktmpdir do |dir|
-          Dir.chdir(dir)
-
+        in_build_dir do
           File.open('build.keymap', 'w') do |io|
             io.write(keymap_data)
           end
 
           compile_output = nil
+
           IO.popen(['compileZmk', './build.keymap'], err: [:child, :out]) do |io|
             compile_output = io.read
           end
+
+          compile_output = compile_output.split("\n")
 
           unless $?.success?
             status = $?.exitstatus
@@ -62,25 +63,42 @@ module LambdaFunction
           end
 
           unless File.exist?('zephyr/zmk.uf2')
-            return error_response(500, error: 'Compile failed to produce result binary')
+            return error_response(500, error: 'Compile failed to produce result binary', detail: compile_output)
           end
 
-          file_response(File.read('zephyr/zmk.uf2'))
+          file_response(File.read('zephyr/zmk.uf2'), compile_output)
+        rescue StandardError => e
+          error_response(500, error: 'Unexpected error', detail: e.message)
         end
-      rescue StandardError => e
-        error_response(500, error: 'Unexpected error', detail: e.message)
       end
 
-      def file_response(file)
+      # Lambda is single-process per container, and we get substantial speedups
+      # from ccache by always building in the same path
+      BUILD_DIR = '/tmp/build'
+
+      def in_build_dir
+        FileUtils.remove_entry(BUILD_DIR, true)
+        Dir.mkdir(BUILD_DIR)
+        Dir.chdir(BUILD_DIR)
+        yield
+      ensure
+        FileUtils.remove_entry(BUILD_DIR, true) rescue nil
+      end
+
+      def file_response(file, compile_output)
         file64 = Base64.strict_encode64(file)
+
+        headers = {
+          'Content-Type' => 'application/octet-stream',
+        }
+
+        headers.merge!('X-Debug-Output' => compile_output.to_json) if ENV.include?('DEBUG')
 
         {
           'isBase64Encoded' => true,
           'statusCode' => 200,
           'body' => file64,
-          'headers' => {
-            'Content-Type' => 'application/octet-stream'
-          }
+          'headers' => headers,
         }
       end
 
