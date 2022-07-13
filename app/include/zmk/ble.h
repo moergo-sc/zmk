@@ -33,6 +33,7 @@ bt_addr_le_t *zmk_ble_active_profile_addr(void);
 bool zmk_ble_active_profile_is_open(void);
 bool zmk_ble_active_profile_is_connected(void);
 char *zmk_ble_active_profile_name(void);
+int8_t zmk_ble_profile_status(uint8_t index);
 
 int zmk_ble_unpair_all(void);
 
