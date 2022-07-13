@@ -5,33 +5,41 @@ let
   zmkPkgs = (import ./default.nix { inherit pkgs; });
   lambda  = (import ./lambda { inherit pkgs; });
 
-  inherit (zmkPkgs) zmk zephyr;
-
-  baseImage = dockerTools.buildImage {
-    name = "base-image";
-    tag  = "latest";
-
-    runAsRoot = ''
-      #!${busybox}/bin/sh
-      set -e
-
-      ${dockerTools.shadowSetup}
-      groupadd -r deploy
-      useradd -r -g deploy -d /data -M deploy
-      mkdir /data
-      chown -R deploy:deploy /data
-
-      mkdir -m 1777 /tmp
-    '';
+  nix-utils = pkgs.fetchFromGitHub {
+    owner = "iknow";
+    repo = "nix-utils";
+    rev = "c13c7a23836c8705452f051d19fc4dff05533b53";
+    sha256 = "0ax7hld5jf132ksdasp80z34dlv75ir0ringzjs15mimrkw8zcac";
   };
 
-  referToPackages = name: ps: writeTextDir name (builtins.toJSON ps);
+  ociTools = pkgs.callPackage "${nix-utils}/oci" {};
 
-  depsImage = dockerTools.buildImage {
-    name = "deps-image";
-    fromImage = baseImage;
-    # FIXME: can zephyr.modules be in zmk's buildInputs without causing trouble?
-    contents = lib.singleton (referToPackages "deps-refs" (zmk.buildInputs ++ zmk.nativeBuildInputs ++ zmk.zephyrModuleDeps));
+  inherit (zmkPkgs) zmk zephyr;
+
+  accounts = {
+    users.deploy = {
+      uid = 999;
+      group = "deploy";
+      home = "/home/deploy";
+      shell = "/bin/sh";
+    };
+    groups.deploy.gid = 999;
+  };
+
+  baseLayer = {
+    name = "base-layer";
+    path = [ pkgs.busybox ];
+    entries = ociTools.makeFilesystem {
+      inherit accounts;
+      tmp = true;
+      usrBinEnv = "${pkgs.busybox}/bin/env";
+      binSh = "${pkgs.busybox}/bin/sh";
+    };
+  };
+
+  depsLayer = {
+    name = "deps-layer";
+    includes = zmk.buildInputs ++ zmk.nativeBuildInputs ++ zmk.zephyrModuleDeps;
   };
 
   zmkCompileScript = writeShellScriptBin "compileZmk" ''
@@ -47,31 +55,31 @@ let
     ninja
   '';
 
-  builderImage = dockerTools.buildImage {
-    name = "zmk-builder";
-    tag = "latest";
-    fromImage = depsImage;
-    contents = [ zmkCompileScript pkgs.busybox ];
+  appLayer = {
+    name = "app-layer";
+    path = [ zmkCompileScript ];
+    entries = ociTools.makeUserDirectoryEntries accounts "deploy" [
+      "/data"
+    ];
   };
 
   lambdaEntrypoint = writeShellScriptBin "lambdaEntrypoint" ''
     set -euo pipefail
-    export PATH=${lib.makeBinPath [zmkCompileScript]}:$PATH
+    export PATH=${lib.makeBinPath [ zmkCompileScript ]}:$PATH
     cd ${lambda.source}
     ${lambda.bundleEnv}/bin/bundle exec aws_lambda_ric "app.LambdaFunction::Handler.process"
   '';
 
-  lambdaImage = dockerTools.buildImage {
+  lambdaImage = ociTools.makeSimpleImage {
     name = "zmk-builder-lambda";
-    tag = "latest";
-    fromImage = builderImage;
-    contents = [ lambdaEntrypoint ];
+    layers = [ baseLayer depsLayer appLayer ];
     config = {
       User = "deploy";
+      WorkingDir = "/data";
       Cmd = [ "${lambdaEntrypoint}/bin/lambdaEntrypoint" ];
     };
 
   };
 in {
-  inherit builderImage lambdaImage zmkCompileScript lambdaEntrypoint;
+  inherit lambdaImage zmkCompileScript lambdaEntrypoint;
 }
