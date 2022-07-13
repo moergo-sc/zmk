@@ -319,6 +319,10 @@ static struct zmk_endpoint_instance get_selected_instance(void) {
     return instance;
 }
 
+bool zmk_endpoints_preferred_transport_is_active(void) {
+    return preferred_transport == get_selected_transport();
+}
+
 static int zmk_endpoints_init(void) {
 #if IS_ENABLED(CONFIG_SETTINGS)
     k_work_init_delayable(&endpoints_save_work, endpoints_save_preferred_work);
