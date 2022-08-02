@@ -16,6 +16,11 @@ The output_directory nix creates is a symlink. If you prefer not to rely on syml
 
     cp -f $(nix-build -A *target* --no-out-link)/zmk.uf2 .
 
+
+# To build Glove80
+In ZMK root directory,
+    cp -f $(nix-build -A glove80_combined --no-out-link)/glove80.uf2 .
+
 # Adding new targets
 Edit default.nix and add an target based on zmk
 
