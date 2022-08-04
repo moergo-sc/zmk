@@ -9,17 +9,13 @@
 #include <drivers/hwinfo.h>
 #include "usb_descriptor.h"
 
-
 #define LOG_LEVEL CONFIG_USB_DEVICE_LOG_LEVEL
 #include <logging/log.h>
 LOG_MODULE_DECLARE(usb_descriptor);
 
-int base32_encode(const uint8_t *data, int length, uint8_t *result,
-                  int bufSize);
+int base32_encode(const uint8_t *data, int length, uint8_t *result, int bufSize);
 
-
-uint8_t *usb_update_sn_string_descriptor(void)
-{
+uint8_t *usb_update_sn_string_descriptor(void) {
     /*
      * nrf52840 hwinfo returns a 64-bit hardware id. Glove80 uses this as a
      * serial number, encoded as base32 into the templated space after the :
@@ -33,7 +29,7 @@ uint8_t *usb_update_sn_string_descriptor(void)
     static uint8_t serial[sizeof(CONFIG_USB_DEVICE_SN)];
     strncpy(serial, CONFIG_USB_DEVICE_SN, template_len);
 
-    uint8_t* prefix_end = strrchr(serial, ':');
+    uint8_t *prefix_end = strrchr(serial, ':');
     if (prefix_end == 0) {
         LOG_DBG("Serial number template missing");
         return CONFIG_USB_DEVICE_SN;
@@ -74,35 +70,34 @@ uint8_t *usb_update_sn_string_descriptor(void)
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-int base32_encode(const uint8_t *data, int length, uint8_t *result,
-                  int bufSize) {
-  if (length < 0 || length > (1 << 28)) {
-    return -1;
-  }
-  int count = 0;
-  if (length > 0) {
-    int buffer = data[0];
-    int next = 1;
-    int bitsLeft = 8;
-    while (count < bufSize && (bitsLeft > 0 || next < length)) {
-      if (bitsLeft < 5) {
-        if (next < length) {
-          buffer <<= 8;
-          buffer |= data[next++] & 0xFF;
-          bitsLeft += 8;
-        } else {
-          int pad = 5 - bitsLeft;
-          buffer <<= pad;
-          bitsLeft += pad;
-        }
-      }
-      int index = 0x1F & (buffer >> (bitsLeft - 5));
-      bitsLeft -= 5;
-      result[count++] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"[index];
+int base32_encode(const uint8_t *data, int length, uint8_t *result, int bufSize) {
+    if (length < 0 || length > (1 << 28)) {
+        return -1;
     }
-  }
-  if (count < bufSize) {
-    result[count] = '\000';
-  }
-  return count;
+    int count = 0;
+    if (length > 0) {
+        int buffer = data[0];
+        int next = 1;
+        int bitsLeft = 8;
+        while (count < bufSize && (bitsLeft > 0 || next < length)) {
+            if (bitsLeft < 5) {
+                if (next < length) {
+                    buffer <<= 8;
+                    buffer |= data[next++] & 0xFF;
+                    bitsLeft += 8;
+                } else {
+                    int pad = 5 - bitsLeft;
+                    buffer <<= pad;
+                    bitsLeft += pad;
+                }
+            }
+            int index = 0x1F & (buffer >> (bitsLeft - 5));
+            bitsLeft -= 5;
+            result[count++] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"[index];
+        }
+    }
+    if (count < bufSize) {
+        result[count] = '\000';
+    }
+    return count;
 }
