@@ -74,5 +74,7 @@ CONFIG_ZMK_HID_CONSUMER_REPORT_USAGES_BASIC=y
 # Default to no logging
 CONFIG_ZMK_USB_LOGGING=n
 
+CONFIG_ZMK_USB_BOOT=y
+
 # Turn on debugging to disable optimization
 CONFIG_DEBUG=n
