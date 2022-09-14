@@ -63,4 +63,5 @@ int base16_encode(const uint8_t *data, int length, uint8_t *result, int bufSize)
     if (i < bufSize) {
         result[i] = '\0';
     }
+    return i;
 }
