@@ -20,7 +20,7 @@ module LambdaFunction
       #
       # Handle the single route: POST /compile
       def process(event:, context:)
-        unless event['path'] == '/compile'
+        unless event['path'] == '/compile' || event['path'] == '/api/compile'
           return error_response(404, error: "Unknown route: #{event['path']}")
         end
 
