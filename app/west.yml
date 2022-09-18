@@ -4,6 +4,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
+    - name: petejohanson
+      url-base: https://github.com/petejohanson
   projects:
     - name: zephyr
       remote: zmkfirmware
@@ -37,5 +39,8 @@ manifest:
       revision: 6cb4c283e76209d59c45fbcb218800cd19e9339d
       path: modules/msgs/zmk-studio-messages
       remote: zmkfirmware
+    - name: cirque-input-module
+      remote: petejohanson
+      revision: 0de55f36bc720b5be3d8880dc856d4d78baf5214
   self:
     west-commands: scripts/west-commands.yml
