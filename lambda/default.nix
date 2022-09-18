@@ -1,11 +1,11 @@
-{ pkgs ? import ./nix/pinned-nixpkgs.nix }:
+{ pkgs ? import <nixpkgs> {} }:
 
 with pkgs;
 
 let
   bundleEnv = bundlerEnv {
     name = "lambda-bundler-env";
-    inherit ruby;
+    ruby     = ruby_3_1;
     gemfile  = ./Gemfile;
     lockfile = ./Gemfile.lock;
     gemset   = ./gemset.nix;

@@ -51,6 +51,7 @@ let
       };
     };
     zmk_glove80_rh = zmk.override { board = "glove80_rh"; };
+    realpath_coreutils = if pkgs.stdenv.isDarwin then pkgs.coreutils else pkgs.busybox;
   in pkgs.writeShellScriptBin "compileZmk" ''
     set -eo pipefail
 
@@ -59,7 +60,7 @@ let
       exit 1
     fi
 
-    KEYMAP="$(${pkgs.busybox}/bin/realpath $1)"
+    KEYMAP="$(${realpath_coreutils}/bin/realpath $1)"
 
     export PATH=${lib.makeBinPath (with pkgs; zmk'.nativeBuildInputs ++ [ ccache ])}:$PATH
     export CMAKE_PREFIX_PATH=${zephyr}
@@ -90,11 +91,6 @@ let
     compileZmk ${zmk.src}/app/boards/arm/glove80/glove80.keymap
   '';
 
-  appLayer = {
-    name = "app-layer";
-    path = [ startLambda zmkCompileScript ];
-  };
-
   entrypoint = pkgs.writeShellScriptBin "entrypoint" ''
     set -euo pipefail
 
@@ -110,14 +106,25 @@ let
     exec "$@"
   '';
 
-  startLambda = pkgs.writeShellScriptBin "startLambda" ''
+  startLambda = handler: pkgs.writeShellScriptBin "startLambda" ''
     set -euo pipefail
     export PATH=${lib.makeBinPath [ zmkCompileScript ]}:$PATH
     cd ${lambda.source}
-    ${lambda.bundleEnv}/bin/bundle exec aws_lambda_ric "app.LambdaFunction::Handler.process"
+    ${lambda.bundleEnv}/bin/bundle exec aws_lambda_ric "app.LambdaFunction::${handler}.process"
   '';
 
-  lambdaImage = ociTools.makeSimpleImage {
+  simulateLambda = lambda: pkgs.writeShellScriptBin "simulateLambda" ''
+    ${pkgs.aws-lambda-rie}/bin/aws-lambda-rie ${lambda}/bin/startLambda
+  '';
+
+  lambdaImage = lambda:
+  let
+    appLayer = {
+      name = "app-layer";
+      path = [ lambda zmkCompileScript ];
+    };
+  in
+  ociTools.makeSimpleImage {
     name = "zmk-builder-lambda";
     layers = [ baseLayer depsLayer appLayer ];
     config = {
@@ -128,6 +135,19 @@ let
       Env = [ "CCACHE_DIR=/tmp/ccache" ];
     };
   };
+
+  # There are two lambda handler functions, depending on whether the lambda is
+  # expected to handle Api Gateway/ELB HTTP requests itself.
+  startHttpLambda = startLambda "HttpHandler";
+  startDirectLambda = startLambda "DirectHandler";
+  httpLambdaImage   = lambdaImage startHttpLambda;
+  directLambdaImage = lambdaImage startDirectLambda;
+
+  simulateDirectLambda = simulateLambda startDirectLambda;
+  simulateHttpLambda   = simulateLambda startHttpLambda;
 in {
-  inherit lambdaImage zmkCompileScript ccacheCache;
+  inherit httpLambdaImage directLambdaImage zmkCompileScript ccacheCache;
+
+  # nix shell -f release.nix simulateDirectLambda -c simulateLambda
+  inherit simulateHttpLambda simulateDirectLambda;
 }

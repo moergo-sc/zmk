@@ -1,117 +1,52 @@
 # frozen_string_literal: true
 
-require 'tmpdir'
-require 'json'
-require 'base64'
+require 'rack'
+require 'serverless_rack'
+
+require './web_app'
+require './compiler'
+
+$app = Rack::Builder.new do
+  run WebApp
+end.to_app
 
 module LambdaFunction
-  class Handler
-    class << self
-      # ALB event structure:
-      # {
-      #   "requestContext": { <snip> },
-      #   "httpMethod": "GET",
-      #   "path": "/",
-      #   "queryStringParameters": {parameters},
-      #   "headers": { <snip> },
-      #   "isBase64Encoded": false,
-      #   "body": "request_body"
-      # }
-      #
-      # Handle the single route: POST /compile
-      def process(event:, context:)
-        unless event['path'] == '/compile' || event['path'] == '/api/compile'
-          return error_response(404, error: "Unknown route: #{event['path']}")
-        end
+  # Handle a API Gateway/ALB-structured HTTP request using the Sinatra app
+  class HttpHandler
+    def self.process(event:, context:)
+      handle_request(app: $app, event: event, context: context)
+    end
+  end
 
-        unless event['httpMethod'] == 'POST'
-          return error_response(404, error: "No route for HTTP method : #{event['httpMethod']}")
-        end
+  # Handle a non-HTTP proxied request, returning either the compiled result or
+  # an error as JSON.
+  class DirectHandler
+    def self.process(event:, context:)
+      base64 = event.fetch('base64', false)
 
-        keymap_data = event['body']
-
-        unless keymap_data
-          return error_response(400, error: 'Missing POST body')
-        end
-
-        if event['isBase64Encoded']
-          keymap_data = Base64.decode64(keymap_data)
-        end
-
-        compile(keymap_data)
+      keymap_data = event.fetch('keymap') do
+        raise ArgumentError.new('Missing required argument: keymap')
       end
 
-      private
+      keymap_data = Base64.decode64(keymap_data) if base64
+      result, log = Compiler.new.compile(keymap_data)
+      result = Base64.strict_encode64(result) if base64
 
-      def compile(keymap_data)
-        in_build_dir do
-          File.open('build.keymap', 'w') do |io|
-            io.write(keymap_data)
-          end
-
-          compile_output = nil
-
-          IO.popen(['compileZmk', './build.keymap'], err: [:child, :out]) do |io|
-            compile_output = io.read
-          end
-
-          compile_output = compile_output.split("\n")
-
-          unless $?.success?
-            status = $?.exitstatus
-            return error_response(400, error: "Compile failed with exit status #{status}", detail: compile_output)
-          end
-
-          unless File.exist?('zephyr/combined.uf2')
-            return error_response(500, error: 'Compile failed to produce result binary', detail: compile_output)
-          end
-
-          file_response(File.read('zephyr/combined.uf2'), compile_output)
-        rescue StandardError => e
-          error_response(500, error: 'Unexpected error', detail: e.message)
-        end
-      end
-
-      # Lambda is single-process per container, and we get substantial speedups
-      # from ccache by always building in the same path
-      BUILD_DIR = '/tmp/build'
-
-      def in_build_dir
-        FileUtils.remove_entry(BUILD_DIR, true)
-        Dir.mkdir(BUILD_DIR)
-        Dir.chdir(BUILD_DIR)
-        yield
-      ensure
-        FileUtils.remove_entry(BUILD_DIR, true) rescue nil
-      end
-
-      def file_response(file, compile_output)
-        file64 = Base64.strict_encode64(file)
-
-        headers = {
-          'Content-Type' => 'application/octet-stream',
-        }
-
-        headers.merge!('X-Debug-Output' => compile_output.to_json) if ENV.include?('DEBUG')
-
-        {
-          'isBase64Encoded' => true,
-          'statusCode' => 200,
-          'body' => file64,
-          'headers' => headers,
-        }
-      end
-
-      def error_response(code, error:, detail: nil)
-        {
-          'isBase64Encoded' => false,
-          'statusCode' => code,
-          'body' => { error: error, detail: detail }.to_json,
-          'headers' => {
-            'Content-Type' => 'application/json'
-          }
-        }
-      end
+      { type: 'result', result: result, log: log, base64: base64 }
+    rescue Compiler::CompileError => e
+      {
+        type: 'error',
+        status: e.status,
+        message: e.message,
+        detail: e.detail,
+      }
+    rescue StandardError => e
+      {
+        type: 'error',
+        status: 500,
+        message: "Unexpected error: #{e.class}",
+        detail: e.message,
+      }
     end
   end
 end
