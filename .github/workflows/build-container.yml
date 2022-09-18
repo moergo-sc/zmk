@@ -1,0 +1,54 @@
+name: Build Container
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ECR_REPOSITORY: zmk-builder-lambda
+      IMAGE_TAG: ${{ github.sha }}
+      DEPLOYMENT_PIPELINE: Glove80FirmwarePipelineStack-Pipeline9850B417-1QR7QRXR15IDV
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::431227615537:role/GithubCompilerLambdaBuilder
+          aws-region: us-east-1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - uses: cachix/install-nix-action@v16
+        with:
+          nix_path: nixpkgs=channel:nixos-22.05
+      - uses: cachix/cachix-action@v10
+        with:
+          name: moergo-glove80-zmk-dev
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: Build lambda image
+        run: nix-build release.nix -A directLambdaImage -o directLambdaImage
+      - name: Import OCI image into docker-daemon
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: nix shell --extra-experimental-features nix-command -f '<nixpkgs>' skopeo -c
+             skopeo --insecure-policy copy oci:directLambdaImage docker-daemon:$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: Push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: Push the image version into a SSM parameter
+        run: nix shell --extra-experimental-features nix-command -f '<nixpkgs>' awscli2 -c
+             aws ssm put-parameter --name "/Glove80FirmwareBuilder-FirmwareBuilder/image_version" --type "String" --value "$IMAGE_TAG" --overwrite
+      - name: Trigger the pipeline to rebuild the API
+        run: nix shell --extra-experimental-features nix-command -f '<nixpkgs>' awscli2 -c
+             aws codepipeline start-pipeline-execution --name $DEPLOYMENT_PIPELINE

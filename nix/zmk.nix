@@ -68,7 +68,7 @@ stdenvNoCC.mkDerivation {
         # Fetched by west
         relPath == "modules" || relPath == "tools" || relPath == "zephyr" ||
         # Not part of ZMK
-        relPath == "lambda"
+        relPath == "lambda" || relPath == ".github"
       );
     };
 
