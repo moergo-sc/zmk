@@ -9,8 +9,8 @@ let
   nix-utils = pkgs.fetchFromGitHub {
     owner = "iknow";
     repo = "nix-utils";
-    rev = "c13c7a23836c8705452f051d19fc4dff05533b53";
-    sha256 = "0ax7hld5jf132ksdasp80z34dlv75ir0ringzjs15mimrkw8zcac";
+    rev = "c11b1ed26a99950128984096cfb78ca924cc6d16";
+    sha256 = "sha256-mWa/VN6/h4cZ3jjTm+Q5AYUBfN+6Db0g+mOgGav1whw=";
   };
 
   ociTools = pkgs.callPackage "${nix-utils}/oci" {};
@@ -124,16 +124,24 @@ let
       path = [ lambda zmkCompileScript ];
     };
   in
-  ociTools.makeSimpleImage {
+  ociTools.makeImageDirectory {
     name = "zmk-builder-lambda";
-    layers = [ baseLayer depsLayer appLayer ];
-    config = {
-      User = "deploy";
-      WorkingDir = "/tmp";
-      Entrypoint = [ "${entrypoint}/bin/entrypoint" ];
-      Cmd = [ "startLambda" ];
-      Env = [ "CCACHE_DIR=/tmp/ccache" ];
-    };
+    manifests = [
+      (ociTools.makeImageIndex {
+        name = "zmk-builder-lambda";
+        images = ociTools.makeImageManifest {
+          name = "zmk-builder-lambda";
+          layers = [ baseLayer depsLayer appLayer ];
+          config = {
+            User = "deploy";
+            WorkingDir = "/tmp";
+            Entrypoint = [ "${entrypoint}/bin/entrypoint" ];
+            Cmd = [ "startLambda" ];
+            Env = [ "CCACHE_DIR=/tmp/ccache" ];
+          };
+        };
+      })
+    ];
   };
 
   # There are two lambda handler functions, depending on whether the lambda is
