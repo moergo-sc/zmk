@@ -1,9 +1,14 @@
-name: Build Container
+name: Build Compiler Service Container
 
 on:
   push:
     branches:
       - 'main'
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -15,8 +20,7 @@ jobs:
       contents: read
     env:
       ECR_REPOSITORY: zmk-builder-lambda
-      IMAGE_TAG: ${{ github.sha }}
-      DEPLOYMENT_PIPELINE: Glove80FirmwarePipelineStack-Pipeline9850B417-1QR7QRXR15IDV
+      UPDATE_COMPILER_VERSIONS_FUNCTION: arn:aws:lambda:us-east-1:431227615537:function:Glove80FirmwarePipelineSt-UpdateCompilerVersions2A-CNxPOHb4VSuV
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Configure AWS credentials
@@ -24,6 +28,25 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::431227615537:role/GithubCompilerLambdaBuilder
           aws-region: us-east-1
+      - name: Extract image tag name
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            tag="latest"
+          elif [ "$GITHUB_HEAD_REF" ]; then
+            pr=${GITHUB_REF#refs/pull/}
+            pr=${pr%/merge}
+            tag="pr${pr}.${GITHUB_HEAD_REF}"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+          else
+            echo "Not a release branch or tag" >&2
+            exit 1
+          fi
+          # Replace / with . in container tag names
+          tag="${tag//\//.}"
+          echo "IMAGE_TAG=${tag}" >> $GITHUB_ENV
+        id: extract_name
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -33,7 +56,6 @@ jobs:
       - uses: cachix/cachix-action@v10
         with:
           name: moergo-glove80-zmk-dev
-          # If you chose API tokens for write access OR if you have a private cache
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: Build lambda image
         run: nix-build release.nix -A directLambdaImage -o directLambdaImage
@@ -45,7 +67,5 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      - name: Push the image version into a SSM parameter
-        run: aws ssm put-parameter --name "/Glove80FirmwareBuilder-FirmwareBuilder/image_version" --type "String" --value "$IMAGE_TAG" --overwrite
-      - name: Trigger the pipeline to rebuild the API
-        run: aws codepipeline start-pipeline-execution --name $DEPLOYMENT_PIPELINE
+      - name: Notify the build pipeline that the compile containers have updated
+        run: aws lambda invoke --function-name $UPDATE_COMPILER_VERSIONS_FUNCTION /dev/null
