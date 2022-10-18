@@ -21,6 +21,8 @@ module LambdaFunction
   # Handle a non-HTTP proxied request, returning either the compiled result or
   # an error as JSON.
   class DirectHandler
+    REVISION = ENV.fetch('REVISION', 'unknown')
+
     def self.process(event:, context:)
       return { type: 'keep_alive' } if event.has_key?('keep_alive')
 
@@ -44,13 +46,13 @@ module LambdaFunction
 
       result = Base64.strict_encode64(result)
 
-      { type: 'result', result: result, log: log }
+      { type: 'result', result: result, log: log, revision: REVISION }
     rescue StandardError => e
       error(status: 500, message: "Unexpected error: #{e.class}", detail: [e.message])
     end
 
     def self.error(status:, message:, detail: nil)
-      { type: 'error', status: status, message: message, detail: detail }
+      { type: 'error', status: status, message: message, detail: detail, revision: REVISION }
     end
   end
 end

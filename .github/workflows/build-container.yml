@@ -21,6 +21,7 @@ jobs:
     env:
       ECR_REPOSITORY: zmk-builder-lambda
       UPDATE_COMPILER_VERSIONS_FUNCTION: arn:aws:lambda:us-east-1:431227615537:function:Glove80FirmwarePipelineSt-UpdateCompilerVersions2A-CNxPOHb4VSuV
+      REVISION_TAG: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Configure AWS credentials
@@ -58,12 +59,12 @@ jobs:
           name: moergo-glove80-zmk-dev
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: Build lambda image
-        run: nix-build release.nix -A directLambdaImage -o directLambdaImage
+        run: nix-build release.nix --arg revision "\"${REVISION_TAG}\"" -A directLambdaImage -o directLambdaImage
       - name: Import OCI image into docker-daemon
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: skopeo --insecure-policy copy oci:directLambdaImage docker-daemon:$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      - name: Push docker image to Amazon ECR
+      - name: Push container image to Amazon ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

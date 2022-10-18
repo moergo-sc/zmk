@@ -1,4 +1,4 @@
-{ pkgs ? (import ./nix/pinned-nixpkgs.nix {}) }:
+{ pkgs ? (import ./nix/pinned-nixpkgs.nix {}), revision ? "HEAD" }:
 
 let
   lib = pkgs.lib;
@@ -132,7 +132,7 @@ let
       WorkingDir = "/tmp";
       Entrypoint = [ "${entrypoint}/bin/entrypoint" ];
       Cmd = [ "startLambda" ];
-      Env = [ "CCACHE_DIR=/tmp/ccache" ];
+      Env = [ "CCACHE_DIR=/tmp/ccache" "REVISION=${revision}" ];
     };
   };
 
