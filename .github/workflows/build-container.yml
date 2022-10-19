@@ -68,5 +68,10 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: Clean up orphaned untagged images
+        shell: bash
+        run: |
+          imageIds=($(aws ecr list-images --repository-name $ECR_REPOSITORY --filter tagStatus=UNTAGGED | jq -r '.imageIds[].imageDigest | "imageDigest="+.'))
+          aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids "${imageIds[@]}"
       - name: Notify the build pipeline that the compile containers have updated
         run: aws lambda invoke --function-name $UPDATE_COMPILER_VERSIONS_FUNCTION /dev/null
