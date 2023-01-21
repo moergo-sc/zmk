@@ -439,6 +439,16 @@ config ZMK_GPIO_KEY_WAKEUP_TRIGGER
     depends on DT_HAS_ZMK_GPIO_KEY_WAKEUP_TRIGGER_ENABLED && ZMK_PM_SOFT_OFF
 
 # Power Management
+if ZMK_EXT_POWER
+
+config ZMK_EXT_POWER_START
+    bool "Enable external power output by default"
+    default y
+
+#ZMK_EXT_POWER
+endif
+
+#Power Management
 endmenu
 
 menu "Combo options"
