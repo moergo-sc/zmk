@@ -216,6 +216,16 @@ config ZMK_BLE_MOUSE_REPORT_QUEUE_SIZE
 config ZMK_BLE_CLEAR_BONDS_ON_START
     bool "Configuration that clears all bond information from the keyboard on startup."
 
+config ZMK_BLE_DEVICE_NAME_APPEND_SN
+    bool "Append the device serial number to the Bluetooth device name"
+    default n
+    select BT_DEVICE_NAME_DYNAMIC
+
+config ZMK_BLE_DEVICE_NAME_SN_CHARS
+    int "Number of hexadecimal digits of serial number to append to the BT device name"
+    default 6
+    depends on ZMK_BLE_DEVICE_NAME_APPEND_SN
+
 # HID GATT notifications sent this way are *not* picked up by Linux, and possibly others.
 config BT_GATT_NOTIFY_MULTIPLE
     default n

@@ -63,8 +63,31 @@ enum advertising_type {
 static struct zmk_ble_profile profiles[ZMK_BLE_PROFILE_COUNT];
 static uint8_t active_profile;
 
+#if IS_ENABLED(CONFIG_ZMK_BLE_DEVICE_NAME_APPEND_SN)
+
+static char bt_device_name[sizeof(CONFIG_BT_DEVICE_NAME) + CONFIG_ZMK_BLE_DEVICE_NAME_SN_CHARS + 1];
+
+void fill_serial_number(char *buf, int length);
+
+// configure the BT device name by appending a serial number prefix to
+// CONFIG_BT_DEVICE_NAME
+void init_bt_device_name(void) {
+    strncpy(bt_device_name, CONFIG_BT_DEVICE_NAME, sizeof(bt_device_name));
+    bt_device_name[sizeof(CONFIG_BT_DEVICE_NAME) - 1] = ' ';
+    fill_serial_number(&bt_device_name[sizeof(CONFIG_BT_DEVICE_NAME)],
+                       CONFIG_ZMK_BLE_DEVICE_NAME_SN_CHARS);
+    bt_device_name[sizeof(bt_device_name) - 1] = '\0';
+}
+
+#define DEVICE_NAME bt_device_name
+#define DEVICE_NAME_LEN (sizeof(bt_device_name) - 1)
+
+#else
+
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
+
+#endif
 
 BUILD_ASSERT(
     DEVICE_NAME_LEN <= CONFIG_BT_DEVICE_NAME_MAX,
@@ -729,12 +752,22 @@ static int zmk_ble_complete_startup(void) {
 }
 
 static int zmk_ble_init(void) {
+#if IS_ENABLED(CONFIG_ZMK_BLE_DEVICE_NAME_APPEND_SN)
+    init_bt_device_name();
+#endif
+
     int err = bt_enable(NULL);
 
     if (err < 0 && err != -EALREADY) {
         LOG_ERR("BLUETOOTH FAILED (%d)", err);
         return err;
     }
+
+#if IS_ENABLED(CONFIG_ZMK_BLE_DEVICE_NAME_APPEND_SN)
+    if (strcmp(bt_get_name(), bt_device_name) != 0) {
+        bt_set_name(bt_device_name);
+    }
+#endif
 
 #if IS_ENABLED(CONFIG_SETTINGS)
     settings_register(&profiles_handler);
