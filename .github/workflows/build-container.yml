@@ -20,6 +20,7 @@ jobs:
       contents: read
     env:
       ECR_REPOSITORY: zmk-builder-lambda
+      VERSIONS_BUCKET: glove80firmwarepipelines-compilerversionsbucket44-zubaquiyjdam
       UPDATE_COMPILER_VERSIONS_FUNCTION: arn:aws:lambda:us-east-1:431227615537:function:Glove80FirmwarePipelineSt-UpdateCompilerVersions2A-CNxPOHb4VSuV
       REVISION_TAG: ${{ github.sha }}
     steps:
@@ -29,11 +30,11 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::431227615537:role/GithubCompilerLambdaBuilder
           aws-region: us-east-1
-      - name: Extract image tag name
+      - name: Extract container name from branch name
         shell: bash
         run: |
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-            tag="latest"
+            tag="branch.main"
           elif [ "$GITHUB_HEAD_REF" ]; then
             pr=${GITHUB_REF#refs/pull/}
             pr=${pr%/merge}
@@ -46,7 +47,7 @@ jobs:
           fi
           # Replace / with . in container tag names
           tag="${tag//\//.}"
-          echo "IMAGE_TAG=${tag}" >> $GITHUB_ENV
+          echo "CONTAINER_NAME=${tag}" >> $GITHUB_ENV
         id: extract_name
       - name: Login to Amazon ECR
         id: login-ecr
@@ -63,10 +64,29 @@ jobs:
       - name: Import OCI image into docker-daemon
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: skopeo --insecure-policy copy oci:directLambdaImage docker-daemon:$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        run: skopeo --insecure-policy copy oci:directLambdaImage docker-daemon:$REGISTRY/$ECR_REPOSITORY:$REVISION_TAG
       - name: Push container image to Amazon ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        run: docker push $REGISTRY/$ECR_REPOSITORY:$REVISION_TAG
+      - name: Create JSON metadata to represent the built container
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
+        run: |
+          digest="$(docker inspect --format='{{index .RepoDigests 0}}' $REGISTRY/$ECR_REPOSITORY:$REVISION_TAG)"
+          digest="${digest##*@}"
+          jq -n '{ name: $name, revision: $revision, branch: $branch, digest: $digest }' \
+            --arg name     "$CONTAINER_NAME" \
+            --arg revision "$REVISION_TAG" \
+            --arg branch   "$GITHUB_REF" \
+            --arg digest   "$digest" \
+            > "/tmp/$CONTAINER_NAME.json"
+      - name: Upload image metadata file to versions bucket
+        run: aws s3 cp "/tmp/$CONTAINER_NAME.json" "s3://$VERSIONS_BUCKET/images/$CONTAINER_NAME.json"
       - name: Notify the build pipeline that the compile containers have updated
-        run: aws lambda invoke --function-name $UPDATE_COMPILER_VERSIONS_FUNCTION /dev/null
+        run: >-
+          aws lambda invoke --function-name $UPDATE_COMPILER_VERSIONS_FUNCTION
+          --invocation-type Event
+          --cli-binary-format raw-in-base64-out
+          /dev/null

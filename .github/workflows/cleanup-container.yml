@@ -16,6 +16,7 @@ jobs:
       contents: read
     env:
       ECR_REPOSITORY: zmk-builder-lambda
+      VERSIONS_BUCKET: glove80firmwarepipelines-compilerversionsbucket44-zubaquiyjdam
       UPDATE_COMPILER_VERSIONS_FUNCTION: arn:aws:lambda:us-east-1:431227615537:function:Glove80FirmwarePipelineSt-UpdateCompilerVersions2A-CNxPOHb4VSuV
       PR_NUMBER: ${{ github.event.number }}
     steps:
@@ -25,14 +26,18 @@ jobs:
           tag="pr${PR_NUMBER}.${GITHUB_HEAD_REF}"
           # Replace / with . in container tag names
           tag="${tag//\//.}"
-          echo "IMAGE_TAG=${tag}" >> $GITHUB_ENV
+          echo "CONTAINER_NAME=${tag}" >> $GITHUB_ENV
         id: extract_name
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: arn:aws:iam::431227615537:role/GithubCompilerLambdaBuilder
           aws-region: us-east-1
-      - name: Delete the container image for the PR from ECR
-        run: aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG
+      - name: Delete the image metadata file from the versions s3 bucket
+        run: aws s3 rm s3://$VERSIONS_BUCKET/images/$CONTAINER_NAME.json
       - name: Notify the build pipeline that the compile containers have updated
-        run: aws lambda invoke --function-name $UPDATE_COMPILER_VERSIONS_FUNCTION /dev/null
+        run: >-
+          aws lambda invoke --function-name $UPDATE_COMPILER_VERSIONS_FUNCTION
+          --invocation-type Event
+          --cli-binary-format raw-in-base64-out
+          /dev/null
