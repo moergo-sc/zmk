@@ -15,15 +15,20 @@ class Compiler
     end
   end
 
-  def compile(keymap_data)
+  def compile(keymap_data, kconfig_data)
     in_build_dir do
-      File.open('build.keymap', 'w') do |io|
-        io.write(keymap_data)
+      compile_command = ['compileZmk', './build.keymap']
+
+      File.open('build.keymap', 'w') { |io| io.write(keymap_data) }
+
+      if kconfig_data
+        File.open('build.conf', 'w') { |io| io.write(kconfig_data) }
+        compile_command << './build.conf'
       end
 
       compile_output = nil
 
-      IO.popen(['compileZmk', './build.keymap'], err: [:child, :out]) do |io|
+      IO.popen(compile_command, err: [:child, :out]) do |io|
         compile_output = io.read
       end
 

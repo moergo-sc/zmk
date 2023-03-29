@@ -37,9 +37,18 @@ module LambdaFunction
           return error(status: 400, message: 'Invalid Base64 in keymap input')
         end
 
+      if event.has_key?('kconfig')
+        kconfig_data =
+          begin
+            Base64.strict_decode64(event['kconfig'])
+          rescue ArgumentError
+            return error(status: 400, message: 'Invalid Base64 in kconfig input')
+          end
+      end
+
       result, log =
         begin
-          Compiler.new.compile(keymap_data)
+          Compiler.new.compile(keymap_data, kconfig_data)
         rescue Compiler::CompileError => e
           return error(status: e.status, message: e.message, detail: e.log)
         end

@@ -4,6 +4,7 @@
 , board ? "glove80_lh"
 , shield ? null
 , keymap ? null
+, kconfig ? null
 }:
 
 
@@ -92,7 +93,8 @@ stdenvNoCC.mkDerivation {
     "-DZEPHYR_MODULES=${lib.concatStringsSep ";" zephyrModuleDeps}"
   ] ++
   (lib.optional (shield != null) "-DSHIELD=${shield}") ++
-  (lib.optional (keymap != null) "-DKEYMAP_FILE=${keymap}");
+  (lib.optional (keymap != null) "-DKEYMAP_FILE=${keymap}") ++
+  (lib.optional (kconfig != null) "-DCONF_FILE=${kconfig}");
 
   nativeBuildInputs = [ cmake ninja python dtc gcc-arm-embedded ];
   buildInputs = [ zephyr ];

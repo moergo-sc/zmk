@@ -16,7 +16,7 @@ class WebApp < Sinatra::Base
   post '/api/compile' do
     request.body.rewind
     keymap_data = request.body.read
-    result, log = Compiler.new.compile(keymap_data)
+    result, log = Compiler.new.compile(keymap_data, nil)
 
     status 200
     content_type 'application/octet-stream'

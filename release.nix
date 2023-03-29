@@ -56,11 +56,24 @@ let
     set -eo pipefail
 
     if [ ! -f "$1" ]; then
-      echo "Usage: compileZmk [file.keymap]" >&2
+      echo "Error: Missing keymap file" >&2
+      echo "Usage: compileZmk file.keymap [file.conf]" >&2
       exit 1
     fi
 
     KEYMAP="$(${realpath_coreutils}/bin/realpath $1)"
+
+    if [ -z "''${2+x}" ]; then
+      KCONFIG=
+    else
+      if [ ! -f "$2" ]; then
+        echo "Error: Missing kconfig file" >&2
+        echo "Usage: compileZmk file.keymap [file.conf]" >&2
+        exit 1
+      fi
+
+      KCONFIG="$(${realpath_coreutils}/bin/realpath $2)"
+    fi
 
     export PATH=${lib.makeBinPath (with pkgs; zmk'.nativeBuildInputs ++ [ ccache ])}:$PATH
     export CMAKE_PREFIX_PATH=${zephyr}
@@ -71,7 +84,7 @@ let
 
     if [ -n "$DEBUG" ]; then ccache -z; fi
 
-    cmake -G Ninja -S ${zmk'.src}/app ${lib.escapeShellArgs zmk'.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DKEYMAP_FILE=$KEYMAP" -DBOARD=glove80_lh
+    cmake -G Ninja -S ${zmk'.src}/app ${lib.escapeShellArgs zmk'.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DKEYMAP_FILE=$KEYMAP" "-DCONF_FILE=$KCONFIG" -DBOARD=glove80_lh
 
     ninja
 
