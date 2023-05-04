@@ -714,6 +714,13 @@ static void split_central_update_indicators_callback(struct k_work *work) {
             continue;
         }
 
+        if (peripherals[i].update_hid_indicators == NULL) {
+            // It appears that sometimes the peripheral is considered connected
+            // before the GATT characteristics have been discovered. If this is
+            // the case, the update_hid_indicators handle will not yet be set.
+            continue;
+        }
+
         int err = bt_gatt_write_without_response(peripherals[i].conn,
                                                  peripherals[i].update_hid_indicators, &indicators,
                                                  sizeof(indicators), true);
