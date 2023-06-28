@@ -76,7 +76,7 @@ jobs:
         run: |
           digest="$(docker inspect --format='{{index .RepoDigests 0}}' $REGISTRY/$ECR_REPOSITORY:$REVISION_TAG)"
           digest="${digest##*@}"
-          jq -n '{ name: $name, revision: $revision, branch: $branch, digest: $digest, api_version: $api_version }' \
+          jq -n '$ARGS.named' \
             --arg name     "$CONTAINER_NAME" \
             --arg revision "$REVISION_TAG" \
             --arg branch   "$GITHUB_REF" \
