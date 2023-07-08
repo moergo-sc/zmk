@@ -18,6 +18,9 @@ CONFIG_BT_DIS_MODEL="Glove80 Right"
 
 CONFIG_BT_CTLR_TX_PWR_PLUS_8=y
 
+# Backport ZMK fix increasing HoG thread stack size (621d946)
+CONFIG_ZMK_BLE_THREAD_STACK_SIZE=768
+
 # Enable MPU
 CONFIG_ARM_MPU=y
 
