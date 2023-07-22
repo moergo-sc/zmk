@@ -60,11 +60,11 @@ jobs:
           name: moergo-glove80-zmk-dev
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Build lambda image
-        run: nix-build release.nix --arg revision "\"${REVISION_TAG}\"" -A directLambdaImage -o directLambdaImage
+        run: nix-build release.nix --arg revision "\"${REVISION_TAG}\"" -A lambdaImage -o lambdaImage
       - name: Import OCI image into docker-daemon
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: skopeo --insecure-policy copy oci:directLambdaImage docker-daemon:$REGISTRY/$ECR_REPOSITORY:$REVISION_TAG
+        run: skopeo --insecure-policy copy oci:lambdaImage docker-daemon:$REGISTRY/$ECR_REPOSITORY:$REVISION_TAG
       - name: Push container image to Amazon ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}

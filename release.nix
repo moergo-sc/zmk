@@ -55,25 +55,55 @@ let
   in pkgs.writeShellScriptBin "compileZmk" ''
     set -eo pipefail
 
-    if [ ! -f "$1" ]; then
-      echo "Error: Missing keymap file" >&2
-      echo "Usage: compileZmk file.keymap [file.conf]" >&2
-      exit 1
-    fi
+    function usage() {
+      echo "Usage: compileZmk [-m] [-k keymap_file] [-c kconfig_file] [-b board]"
+    }
 
-    KEYMAP="$(${realpath_coreutils}/bin/realpath $1)"
-
-    if [ -z "''${2+x}" ]; then
-      KCONFIG=
-    else
-      if [ ! -f "$2" ]; then
-        echo "Error: Missing kconfig file" >&2
-        echo "Usage: compileZmk file.keymap [file.conf]" >&2
+    function checkPath() {
+      if [ -z "$1" ]; then
+        return 0
+      elif [ ! -f "$1" ]; then
+        echo "Error: Missing $2 file" >&2
+        usage >&2
         exit 1
       fi
 
-      KCONFIG="$(${realpath_coreutils}/bin/realpath $2)"
+      ${realpath_coreutils}/bin/realpath "$1"
+    }
+
+    keymap="${zmk.src}/app/boards/arm/glove80/glove80.keymap"
+    kconfig=""
+    board="glove80_lh"
+    merge_rhs=""
+
+    while getopts "hk:c:d:b:m" opt; do
+      case "$opt" in
+        h|\?)
+          usage >&2
+          exit 1
+          ;;
+        k)
+          keymap="$OPTARG"
+          ;;
+        c)
+          kconfig="$OPTARG"
+          ;;
+        b)
+          board="$OPTARG"
+          ;;
+        m)
+          merge_rhs=t
+          ;;
+      esac
+    done
+
+    if [ "$board" = "glove80_rh" -a -n "$merge_rhs" ]; then
+      echo "Cannot merge static RHS with built RHS" >&2
+      exit 2
     fi
+
+    keymap="$(checkPath "$keymap" keymap)"
+    kconfig="$(checkPath "$kconfig" Kconfig)"
 
     export PATH=${lib.makeBinPath (with pkgs; zmk'.nativeBuildInputs ++ [ ccache ])}:$PATH
     export CMAKE_PREFIX_PATH=${zephyr}
@@ -84,13 +114,17 @@ let
 
     if [ -n "$DEBUG" ]; then ccache -z; fi
 
-    cmake -G Ninja -S ${zmk'.src}/app ${lib.escapeShellArgs zmk'.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DKEYMAP_FILE=$KEYMAP" "-DCONF_FILE=$KCONFIG" -DBOARD=glove80_lh
+    cmake -G Ninja -S ${zmk'.src}/app ${lib.escapeShellArgs zmk'.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DKEYMAP_FILE=$keymap" "-DCONF_FILE=$kconfig" "-DBOARD=$board" "-DBUILD_VERSION=${revision}"
 
     ninja
 
     if [ -n "$DEBUG" ]; then ccache -s; fi
 
-    cat zephyr/zmk.uf2 ${zmk_glove80_rh}/zmk.uf2 > zephyr/combined.uf2
+    if [ -n "$merge_rhs" ]; then
+      cat zephyr/zmk.uf2 ${zmk_glove80_rh}/zmk.uf2 > zmk.uf2
+    else
+      mv zephyr/zmk.uf2 zmk.uf2
+    fi
   '';
 
   ccacheCache = pkgs.runCommandNoCC "ccache-cache" {
@@ -101,7 +135,13 @@ let
     mkdir /tmp/build
     cd /tmp/build
 
-    compileZmk ${zmk.src}/app/boards/arm/glove80/glove80.keymap
+    compileZmk -b glove80_lh -k ${zmk.src}/app/boards/arm/glove80/glove80.keymap
+
+    rm -fr /tmp/build
+    mkdir /tmp/build
+    cd /tmp/build
+
+    compileZmk -b glove80_rh -k ${zmk.src}/app/boards/arm/glove80/glove80.keymap
   '';
 
   entrypoint = pkgs.writeShellScriptBin "entrypoint" ''
@@ -119,22 +159,22 @@ let
     exec "$@"
   '';
 
-  startLambda = handler: pkgs.writeShellScriptBin "startLambda" ''
+  startLambda = pkgs.writeShellScriptBin "startLambda" ''
     set -euo pipefail
     export PATH=${lib.makeBinPath [ zmkCompileScript ]}:$PATH
     cd ${lambda.source}
-    ${lambda.bundleEnv}/bin/bundle exec aws_lambda_ric "app.LambdaFunction::${handler}.process"
+    ${lambda.bundleEnv}/bin/bundle exec aws_lambda_ric "app.LambdaFunction::Handler.process"
   '';
 
-  simulateLambda = lambda: pkgs.writeShellScriptBin "simulateLambda" ''
-    ${pkgs.aws-lambda-rie}/bin/aws-lambda-rie ${lambda}/bin/startLambda
+  simulateLambda = pkgs.writeShellScriptBin "simulateLambda" ''
+    ${pkgs.aws-lambda-rie}/bin/aws-lambda-rie ${startLambda}/bin/startLambda
   '';
 
-  lambdaImage = lambda:
+  lambdaImage =
   let
     appLayer = {
       name = "app-layer";
-      path = [ lambda zmkCompileScript ];
+      path = [ startLambda zmkCompileScript ];
     };
   in
   ociTools.makeSimpleImage {
@@ -148,19 +188,10 @@ let
       Env = [ "CCACHE_DIR=/tmp/ccache" "REVISION=${revision}" ];
     };
   };
-
-  # There are two lambda handler functions, depending on whether the lambda is
-  # expected to handle Api Gateway/ELB HTTP requests itself.
-  startHttpLambda = startLambda "HttpHandler";
-  startDirectLambda = startLambda "DirectHandler";
-  httpLambdaImage   = lambdaImage startHttpLambda;
-  directLambdaImage = lambdaImage startDirectLambda;
-
-  simulateDirectLambda = simulateLambda startDirectLambda;
-  simulateHttpLambda   = simulateLambda startHttpLambda;
 in {
-  inherit httpLambdaImage directLambdaImage zmkCompileScript ccacheCache;
+  inherit lambdaImage zmkCompileScript ccacheCache;
+  directLambdaImage = lambdaImage;
 
-  # nix shell -f release.nix simulateDirectLambda -c simulateLambda
-  inherit simulateHttpLambda simulateDirectLambda;
+  # nix shell -f release.nix simulateLambda -c simulateLambda
+  inherit simulateLambda;
 }
