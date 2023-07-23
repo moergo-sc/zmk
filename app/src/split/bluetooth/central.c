@@ -358,8 +358,7 @@ static uint8_t split_central_chrc_discovery_func(struct bt_conn *conn,
     }
 
     bool subscribed = (slot->run_behavior_handle && slot->subscribe_params.value_handle &&
-                       slot->update_hid_indicators) &&
-                       slot->batt_lvl_subscribe_params.value_handle);
+                       slot->update_hid_indicators && slot->batt_lvl_subscribe_params.value_handle);
 
     return subscribed ? BT_GATT_ITER_STOP : BT_GATT_ITER_CONTINUE;
 }
@@ -714,7 +713,7 @@ static void split_central_update_indicators_callback(struct k_work *work) {
             continue;
         }
 
-        if (peripherals[i].update_hid_indicators == NULL) {
+        if (peripherals[i].update_hid_indicators == 0) {
             // It appears that sometimes the peripheral is considered connected
             // before the GATT characteristics have been discovered. If this is
             // the case, the update_hid_indicators handle will not yet be set.
