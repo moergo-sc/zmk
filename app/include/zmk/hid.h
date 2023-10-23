@@ -21,6 +21,7 @@
 #define HID_REPORT_ID_KEYBOARD 0x01
 #define HID_REPORT_ID_LEDS 0x01
 #define HID_REPORT_ID_CONSUMER 0x02
+#define HID_REPORT_ID_MOUSE 0x04
 
 static const uint8_t zmk_hid_report_desc[] = {
     HID_USAGE_PAGE(HID_USAGE_GEN_DESKTOP),
@@ -117,7 +118,7 @@ static const uint8_t zmk_hid_report_desc[] = {
     /* COLLECTION (Application) */
     HID_COLLECTION(HID_COLLECTION_APPLICATION),
     /* REPORT ID (4) */
-    HID_REPORT_ID(0x04),
+    HID_REPORT_ID(HID_REPORT_ID_MOUSE),
     /* USAGE (Pointer) */
     HID_USAGE(HID_USAGE_GD_POINTER),
     /* COLLECTION (Physical) */

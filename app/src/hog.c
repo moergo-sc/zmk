@@ -66,7 +66,7 @@ static struct hids_report consumer_input = {
 
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
 static struct hids_report mouse_input = {
-    .id = 0x04,
+    .id = HID_REPORT_ID_MOUSE,
     .type = HIDS_INPUT,
 };
 #endif
