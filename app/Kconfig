@@ -177,7 +177,6 @@ config ZMK_BLE_EXPERIMENTAL_FEATURES
 
 config ZMK_BLE_PASSKEY_ENTRY
     bool "Require passkey entry on the keyboard to complete pairing"
-    default n
     select RING_BUFFER
 
 config BT_SMP_ALLOW_UNAUTH_OVERWRITE
@@ -216,7 +215,16 @@ config ZMK_BLE_MOUSE_REPORT_QUEUE_SIZE
 
 config ZMK_BLE_CLEAR_BONDS_ON_START
     bool "Configuration that clears all bond information from the keyboard on startup."
+
+config ZMK_BLE_DEVICE_NAME_APPEND_SN
+    bool "Append the device serial number to the Bluetooth device name"
     default n
+    select BT_DEVICE_NAME_DYNAMIC
+
+config ZMK_BLE_DEVICE_NAME_SN_CHARS
+    int "Number of hexadecimal digits of serial number to append to the BT device name"
+    default 6
+    depends on ZMK_BLE_DEVICE_NAME_APPEND_SN
 
 config ZMK_BLE_DEVICE_NAME_APPEND_SN
     bool "Append the device serial number to the Bluetooth device name"
@@ -383,7 +391,6 @@ menu "Mouse Options"
 
 config ZMK_MOUSE
     bool "Enable ZMK mouse emulation"
-    default n
 
 #Mouse Options
 endmenu
@@ -392,7 +399,6 @@ menu "Power Management"
 
 config ZMK_BATTERY_REPORTING
     bool "Battery level detection/reporting"
-    default n
     select SENSOR
     select ZMK_LOW_PRIORITY_WORK_QUEUE
     imply BT_BAS if ZMK_BLE
@@ -635,7 +641,6 @@ config FPU
 
 config ZMK_WPM
     bool "Calculate WPM"
-    default n
 
 config ZMK_KEYMAP_SENSORS
     bool "Enable Keymap Sensors support"
