@@ -4,6 +4,8 @@
 if (NOT CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
   target_sources(app PRIVATE service.c)
   target_sources(app PRIVATE peripheral.c)
+  target_sources(app PRIVATE peripheral_layers.c)
+
 endif()
 if (CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
   target_sources(app PRIVATE central.c)
