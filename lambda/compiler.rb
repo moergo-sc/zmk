@@ -91,7 +91,7 @@ class Compiler
   end
 
   PERMITTED_DTS_SECTIONS = %w[
-    behaviors macros combos conditional_layers keymap underglow-indicators
+    behaviors macros combos conditional_layers keymap underglow-indicators underglow-layer
     cirque_lh_listener cirque_rh_listener
     input_processors
     mkp_input_listener mmv_input_listener msc_input_listener
