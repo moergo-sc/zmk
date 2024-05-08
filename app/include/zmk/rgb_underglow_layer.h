@@ -14,5 +14,5 @@
     (DT_FOREACH_CHILD(DT_INST(0, zmk_underglow_layer), ZMK_RGB_CHILD_LEN_PLUS_ONE) 0)
 
 const int zmk_rgbmap_id(uint8_t layer);
-uint32_t *rgb_underglow_get_bindings(void);
-uint8_t rgb_underglow_top_layer(void);
+uint32_t *rgb_underglow_get_bindings(uint8_t layer);
+uint8_t rgb_underglow_top_layer_with_state(uint32_t state_to_test);

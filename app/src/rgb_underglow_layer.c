@@ -41,8 +41,7 @@ const int zmk_rgbmap_id(uint8_t layer) {
     return -1;
 }
 
-uint32_t *rgb_underglow_get_bindings(void) {
-    uint8_t layer = rgb_underglow_top_layer();
+uint32_t *rgb_underglow_get_bindings(uint8_t layer) {
     int rgblayer = zmk_rgbmap_id(layer);
     if (rgblayer == -1){
         return NULL;
@@ -51,15 +50,12 @@ uint32_t *rgb_underglow_get_bindings(void) {
     }
 }
 
-uint8_t rgb_underglow_top_layer(void) {
+uint8_t rgb_underglow_top_layer_with_state(uint32_t state_to_test) {
     for (uint8_t layer = ZMK_KEYMAP_LAYERS_LEN - 1; layer > 0; layer--) {
-#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
-        if (zmk_keymap_layer_active(layer)) {
-#else
-        if (peripheral_layer_active(layer)) {
-#endif
+        if ((state_to_test & (BIT(layer))) == (BIT(layer)) || layer == 0) {
             return layer;
         }
     }
-    return -1;
+    // return default layer (0)
+    return 0;
 }
