@@ -35,6 +35,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include <zmk/events/sensor_event.h>
 #include <zmk/sensors.h>
+#include <zmk/events/split_peripheral_layer_changed.h>
 
 #if ZMK_KEYMAP_HAS_SENSORS
 static struct sensor_event last_sensor_event;
@@ -144,7 +145,9 @@ static uint32_t layers = 0;
 
 static void split_svc_update_layers_callback(struct k_work *work) {
     LOG_DBG("Setting peripheral layers: %x", layers);
-    set_peripheral_layers_state(layers);
+    // set_peripheral_layers_state(layers);
+    raise_zmk_split_peripheral_layer_changed(
+        (struct zmk_split_peripheral_layer_changed){.layers = layers});
 }
 
 static K_WORK_DEFINE(split_svc_update_layers_work, split_svc_update_layers_callback);
