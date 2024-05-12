@@ -52,6 +52,10 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #endif
 
+#if DT_HAS_COMPAT_STATUS_OKAY(zmk_underglow_layer)
+#define UNDERGLOW_LAYER_ENABLED
+#endif
+
 #define STRIP_CHOSEN DT_CHOSEN(zmk_underglow)
 #define STRIP_NUM_PIXELS DT_PROP(STRIP_CHOSEN, chain_length)
 
@@ -437,6 +441,8 @@ static inline struct led_rgb hue_sat(int hue, int sat) {
     return hsb_to_rgb(hsb_scale_min_max(hsb));
 }
 
+#ifdef UNDERGLOW_LAYER_ENABLED
+
 static struct led_rgb hex_to_rgb(uint8_t r, uint8_t g, uint8_t b) {
     struct zmk_led_hsb hsb = state.color;
     return (struct led_rgb){
@@ -482,6 +488,7 @@ static void zmk_rgb_underglow_set_layer(uint8_t layer) {
     zmk_led_write_pixels();
     zmk_rgb_set_ext_power();
 }
+#endif /* UNDERGLOW_LAYER_ENABLED */
 
 static void zmk_rgb_underglow_tick(struct k_work *work) {
     switch (state.current_effect) {
@@ -498,7 +505,7 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         zmk_rgb_underglow_effect_swirl();
         break;
     case UNDERGLOW_EFFECT_LAYER_INDICATORS:
-        //zmk_rgb_underglow_set_layer();
+        // zmk_rgb_underglow_set_layer();
         break;
     }
 
@@ -849,6 +856,9 @@ static int rgb_underglow_auto_state(bool target_wake_state) {
 
     if (sleep_state.is_awake) {
         if (sleep_state.rgb_state_before_sleeping) {
+#ifdef UNDERGLOW_LAYER_ENABLED
+            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+#endif
             return zmk_rgb_underglow_on();
         } else {
             return zmk_rgb_underglow_off();
@@ -865,16 +875,22 @@ static int rgb_underglow_event_listener(const zmk_event_t *eh) {
     if (as_zmk_activity_state_changed(eh)) {
         return rgb_underglow_auto_state(zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE);
     }
-    if (as_zmk_split_peripheral_layer_changed(eh)) {
-        const struct zmk_split_peripheral_layer_changed *ev = as_zmk_split_peripheral_layer_changed(eh);
-        LOG_DBG("zmk_split_peripheral_layer_changed: %08x", ev->layers);
+#endif
 
-        uint8_t layer = rgb_underglow_top_layer_with_state(ev->layers);
+#ifdef UNDERGLOW_LAYER_ENABLED
+    if (as_zmk_split_peripheral_layer_changed(eh)) {
+        const struct zmk_split_peripheral_layer_changed *ev =
+            as_zmk_split_peripheral_layer_changed(eh);
+        LOG_DBG("zmk_split_peripheral_layer_changed: %08x", ev->layers);
+#if !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+        set_peripheral_layers_state(ev->layers);
+#endif
+        uint8_t layer = rgb_underglow_top_layer();
         LOG_DBG("top layer: %d", layer);
         zmk_rgb_underglow_set_layer(layer);
         return 0;
     }
-#endif
+#endif /* UNDERGLOW_LAYER_ENABLED */
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
     if (as_zmk_usb_conn_state_changed(eh)) {
@@ -891,7 +907,9 @@ ZMK_LISTENER(rgb_underglow, rgb_underglow_event_listener);
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE)
 ZMK_SUBSCRIPTION(rgb_underglow, zmk_activity_state_changed);
+#ifdef UNDERGLOW_LAYER_ENABLED
 ZMK_SUBSCRIPTION(rgb_underglow, zmk_split_peripheral_layer_changed);
+#endif
 #endif
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)

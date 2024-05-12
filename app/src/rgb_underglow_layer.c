@@ -20,17 +20,16 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #endif
 
 #define DT_DRV_COMPAT zmk_underglow_layer
+#if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
+#define UNDERGLOW_LAYER_ENABLED
 #define LAYER_ID(node) DT_PROP(node, layer_id)
 #define RGB_BINDINGS(node) DT_PROP(node, bindings)
 
 static uint32_t zmk_rgbmap[ZMK_RGBMAP_LAYERS_LEN][ZMK_KEYMAP_LEN] = {
-    DT_INST_FOREACH_CHILD_SEP(0, RGB_BINDINGS, (, ))
-};
+    DT_INST_FOREACH_CHILD_SEP(0, RGB_BINDINGS, (, ))};
 
-static int zmk_rgbmap_ids[ZMK_RGBMAP_LAYERS_LEN] = {
-    DT_INST_FOREACH_CHILD_SEP(0, LAYER_ID, (, ))};
-
+static int zmk_rgbmap_ids[ZMK_RGBMAP_LAYERS_LEN] = {DT_INST_FOREACH_CHILD_SEP(0, LAYER_ID, (, ))};
 
 const int zmk_rgbmap_id(uint8_t layer) {
     for (uint8_t i = 0; i < ZMK_RGBMAP_LAYERS_LEN; i++) {
@@ -43,7 +42,7 @@ const int zmk_rgbmap_id(uint8_t layer) {
 
 uint32_t *rgb_underglow_get_bindings(uint8_t layer) {
     int rgblayer = zmk_rgbmap_id(layer);
-    if (rgblayer == -1){
+    if (rgblayer == -1) {
         return NULL;
     } else {
         return zmk_rgbmap[rgblayer];
@@ -59,3 +58,12 @@ uint8_t rgb_underglow_top_layer_with_state(uint32_t state_to_test) {
     // return default layer (0)
     return 0;
 }
+
+uint8_t rgb_underglow_top_layer(void) {
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+    return zmk_keymap_highest_layer_active();
+#else
+    return peripheral_highest_layer_active();
+#endif
+}
+#endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
