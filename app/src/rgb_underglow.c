@@ -475,18 +475,17 @@ static void zmk_rgb_underglow_apply_rgbmap(uint32_t rgbmap[], size_t rgbmap_len)
 }
 
 static void zmk_rgb_underglow_set_layer(uint8_t layer) {
-    state.on = true;
+    if (state.current_effect != UNDERGLOW_EFFECT_LAYER_INDICATORS)
+        return;
+
     uint32_t *rgbmap = rgb_underglow_get_bindings(layer);
     if (rgbmap != NULL) {
         zmk_rgb_underglow_apply_rgbmap(rgbmap, ZMK_KEYMAP_LEN);
+        zmk_rgb_underglow_transient_on();
+        zmk_led_write_pixels();
     } else {
-        for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
-            pixels[i] = (struct led_rgb){r : 0, g : 0, b : 0};
-        }
-        state.on = false;
+        zmk_rgb_underglow_transient_off();
     }
-    zmk_led_write_pixels();
-    zmk_rgb_set_ext_power();
 }
 #endif /* UNDERGLOW_LAYER_ENABLED */
 
@@ -515,7 +514,7 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
 K_WORK_DEFINE(underglow_tick_work, zmk_rgb_underglow_tick);
 
 static void zmk_rgb_underglow_tick_handler(struct k_timer *timer) {
-    if (!state.on && state.current_effect == UNDERGLOW_EFFECT_LAYER_INDICATORS) {
+    if (!state.on || state.current_effect == UNDERGLOW_EFFECT_LAYER_INDICATORS) {
         return;
     }
 
@@ -647,6 +646,11 @@ void zmk_rgb_set_ext_power(void) {
 }
 
 int zmk_rgb_underglow_on(void) {
+    zmk_rgb_underglow_transient_on();
+    return zmk_rgb_underglow_save_state();
+}
+
+int zmk_rgb_underglow_transient_on(void) {
     if (!led_strip)
         return -ENODEV;
 
@@ -656,7 +660,7 @@ int zmk_rgb_underglow_on(void) {
     state.animation_step = 0;
     k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(25));
 
-    return zmk_rgb_underglow_save_state();
+    return 0;
 }
 
 static void zmk_rgb_underglow_off_handler(struct k_work *work) {
@@ -669,6 +673,11 @@ static void zmk_rgb_underglow_off_handler(struct k_work *work) {
 K_WORK_DEFINE(underglow_off_work, zmk_rgb_underglow_off_handler);
 
 int zmk_rgb_underglow_off(void) {
+    zmk_rgb_underglow_transient_off();
+    return zmk_rgb_underglow_save_state();
+}
+
+int zmk_rgb_underglow_transient_off(void) {
     if (!led_strip)
         return -ENODEV;
 
@@ -678,7 +687,7 @@ int zmk_rgb_underglow_off(void) {
     state.on = false;
     zmk_rgb_set_ext_power();
 
-    return zmk_rgb_underglow_save_state();
+    return 0;
 }
 
 int zmk_rgb_underglow_calc_effect(int direction) {
@@ -855,17 +864,19 @@ static int rgb_underglow_auto_state(bool target_wake_state) {
     sleep_state.is_awake = target_wake_state;
 
     if (sleep_state.is_awake) {
-        if (sleep_state.rgb_state_before_sleeping) {
 #ifdef UNDERGLOW_LAYER_ENABLED
-            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
-#endif
-            return zmk_rgb_underglow_on();
+        zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+        return 0;
+#else
+        if (sleep_state.rgb_state_before_sleeping) {
+            return zmk_rgb_underglow_transient_on();
         } else {
-            return zmk_rgb_underglow_off();
+            return zmk_rgb_underglow_transient_off();
         }
+#endif
     } else {
         sleep_state.rgb_state_before_sleeping = state.on;
-        return zmk_rgb_underglow_off();
+        return zmk_rgb_underglow_transient_off();
     }
 }
 
