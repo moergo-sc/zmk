@@ -82,6 +82,7 @@ struct rgb_underglow_state {
     uint16_t animation_step;
     bool on;
     bool status_active;
+    bool layer_enabled;
     uint16_t status_animation_step;
 };
 
@@ -475,7 +476,7 @@ static void zmk_rgb_underglow_apply_rgbmap(uint32_t rgbmap[], size_t rgbmap_len)
 }
 
 static void zmk_rgb_underglow_set_layer(uint8_t layer) {
-    if (state.current_effect != UNDERGLOW_EFFECT_LAYER_INDICATORS)
+    if (!state.layer_enabled)
         return;
 
     uint32_t *rgbmap = rgb_underglow_get_bindings(layer);
@@ -607,7 +608,7 @@ int zmk_rgb_underglow_get_state(bool *on_off) {
     if (!led_strip)
         return -ENODEV;
 
-    *on_off = state.on;
+    *on_off = state.on || state.layer_enabled;
     return 0;
 }
 
@@ -647,6 +648,9 @@ void zmk_rgb_set_ext_power(void) {
 
 int zmk_rgb_underglow_on(void) {
     zmk_rgb_underglow_transient_on();
+    if (state.current_effect == UNDERGLOW_EFFECT_LAYER_INDICATORS) {
+        state.layer_enabled = true;
+    }
     return zmk_rgb_underglow_save_state();
 }
 
@@ -674,6 +678,7 @@ K_WORK_DEFINE(underglow_off_work, zmk_rgb_underglow_off_handler);
 
 int zmk_rgb_underglow_off(void) {
     zmk_rgb_underglow_transient_off();
+    state.layer_enabled = false;
     return zmk_rgb_underglow_save_state();
 }
 
@@ -704,7 +709,7 @@ int zmk_rgb_underglow_select_effect(int effect) {
 
     state.current_effect = effect;
     state.animation_step = 0;
-
+    state.layer_enabled = (effect == UNDERGLOW_EFFECT_LAYER_INDICATORS);
     return zmk_rgb_underglow_save_state();
 }
 
