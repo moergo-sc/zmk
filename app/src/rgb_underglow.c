@@ -53,7 +53,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #endif
 
 #if DT_HAS_COMPAT_STATUS_OKAY(zmk_underglow_layer)
-#define UNDERGLOW_LAYER_ENABLED
+#define UNDERGLOW_LAYER_ENABLED 1
 #endif
 
 #define STRIP_CHOSEN DT_CHOSEN(zmk_underglow)
@@ -442,7 +442,7 @@ static inline struct led_rgb hue_sat(int hue, int sat) {
     return hsb_to_rgb(hsb_scale_min_max(hsb));
 }
 
-#ifdef UNDERGLOW_LAYER_ENABLED
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
 
 static struct led_rgb hex_to_rgb(uint8_t r, uint8_t g, uint8_t b) {
     struct zmk_led_hsb hsb = state.color;
@@ -488,7 +488,7 @@ static void zmk_rgb_underglow_set_layer(uint8_t layer) {
         zmk_rgb_underglow_transient_off();
     }
 }
-#endif /* UNDERGLOW_LAYER_ENABLED */
+#endif /* IS_ENABLED(UNDERGLOW_LAYER_ENABLED) */
 
 static void zmk_rgb_underglow_tick(struct k_work *work) {
     switch (state.current_effect) {
@@ -850,7 +850,7 @@ int zmk_rgb_underglow_change_spd(int direction) {
 }
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE) ||                                          \
-    IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
+    IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB) || IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
 struct rgb_underglow_sleep_state {
     bool is_awake;
     bool rgb_state_before_sleeping;
@@ -869,7 +869,7 @@ static int rgb_underglow_auto_state(bool target_wake_state) {
     sleep_state.is_awake = target_wake_state;
 
     if (sleep_state.is_awake) {
-#ifdef UNDERGLOW_LAYER_ENABLED
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
         zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
         return 0;
 #else
@@ -893,7 +893,7 @@ static int rgb_underglow_event_listener(const zmk_event_t *eh) {
     }
 #endif
 
-#ifdef UNDERGLOW_LAYER_ENABLED
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
     if (as_zmk_split_peripheral_layer_changed(eh)) {
         const struct zmk_split_peripheral_layer_changed *ev =
             as_zmk_split_peripheral_layer_changed(eh);
@@ -919,17 +919,19 @@ static int rgb_underglow_event_listener(const zmk_event_t *eh) {
 
 ZMK_LISTENER(rgb_underglow, rgb_underglow_event_listener);
 #endif // IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE) ||
-       // IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
+       // IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB) ||
+       // IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE)
 ZMK_SUBSCRIPTION(rgb_underglow, zmk_activity_state_changed);
-#ifdef UNDERGLOW_LAYER_ENABLED
-ZMK_SUBSCRIPTION(rgb_underglow, zmk_split_peripheral_layer_changed);
-#endif
 #endif
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
 ZMK_SUBSCRIPTION(rgb_underglow, zmk_usb_conn_state_changed);
+#endif
+
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
+ZMK_SUBSCRIPTION(rgb_underglow, zmk_split_peripheral_layer_changed);
 #endif
 
 SYS_INIT(zmk_rgb_underglow_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
