@@ -52,7 +52,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #endif
 
-#if DT_HAS_COMPAT_STATUS_OKAY(zmk_underglow_layer)
+#if DT_HAS_COMPAT_STATUS_OKAY(zmk_underglow_layer) && IS_ENABLED(CONFIG_EXPERIMENTAL_RGB_LAYER)
 #define UNDERGLOW_LAYER_ENABLED 1
 #endif
 
@@ -71,7 +71,9 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_BREATHE,
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
     UNDERGLOW_EFFECT_LAYER_INDICATORS,
+#endif
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
@@ -504,9 +506,6 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
     case UNDERGLOW_EFFECT_SWIRL:
         zmk_rgb_underglow_effect_swirl();
         break;
-    case UNDERGLOW_EFFECT_LAYER_INDICATORS:
-        // zmk_rgb_underglow_set_layer();
-        break;
     }
 
     zmk_led_write_pixels();
@@ -515,7 +514,7 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
 K_WORK_DEFINE(underglow_tick_work, zmk_rgb_underglow_tick);
 
 static void zmk_rgb_underglow_tick_handler(struct k_timer *timer) {
-    if (!state.on || state.current_effect == UNDERGLOW_EFFECT_LAYER_INDICATORS) {
+    if (!state.on || state.layer_enabled) {
         return;
     }
 
@@ -648,9 +647,11 @@ void zmk_rgb_set_ext_power(void) {
 
 int zmk_rgb_underglow_on(void) {
     zmk_rgb_underglow_transient_on();
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
     if (state.current_effect == UNDERGLOW_EFFECT_LAYER_INDICATORS) {
         state.layer_enabled = true;
     }
+#endif
     return zmk_rgb_underglow_save_state();
 }
 
@@ -709,7 +710,9 @@ int zmk_rgb_underglow_select_effect(int effect) {
 
     state.current_effect = effect;
     state.animation_step = 0;
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
     state.layer_enabled = (effect == UNDERGLOW_EFFECT_LAYER_INDICATORS);
+#endif
     return zmk_rgb_underglow_save_state();
 }
 
