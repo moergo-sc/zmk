@@ -455,7 +455,7 @@ static struct led_rgb hex_to_rgb(uint8_t r, uint8_t g, uint8_t b) {
     };
 }
 
-static void zmk_rgb_underglow_apply_rgbmap(uint32_t rgbmap[], size_t rgbmap_len) {
+static int zmk_rgb_underglow_apply_rgbmap(uint32_t rgbmap[], size_t rgbmap_len) {
 // TODO: Glove80 specifics, move that part to board's devicetree
 #ifdef LEFT_HALF
     const uint8_t LED_MATRIX[] = {52, 53, 54, 69, 70, 71, 15, 27, 39, 51, 4,  14, 26, 38,
@@ -466,6 +466,7 @@ static void zmk_rgb_underglow_apply_rgbmap(uint32_t rgbmap[], size_t rgbmap_len)
                                   59, 75, 6,  18, 30, 42, 60, 76, 7,  19, 31, 43, 61, 77,
                                   8,  20, 32, 44, 62, 78, 9,  21, 33, 45, 63, 79};
 #endif
+    int rc = 0;
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         uint8_t midx = LED_MATRIX[i];
         if (midx >= ZMK_KEYMAP_LEN) {
@@ -473,8 +474,11 @@ static void zmk_rgb_underglow_apply_rgbmap(uint32_t rgbmap[], size_t rgbmap_len)
         } else {
             pixels[i] = hex_to_rgb((rgbmap[midx] & 0xFF0000) >> 16, (rgbmap[midx] & 0xFF00) >> 8,
                                    rgbmap[midx] & 0xFF);
+            if (rgbmap[midx] > 0)
+                rc = 1;
         }
     }
+    return rc;
 }
 
 static void zmk_rgb_underglow_set_layer(uint8_t layer) {
@@ -482,12 +486,13 @@ static void zmk_rgb_underglow_set_layer(uint8_t layer) {
         return;
 
     uint32_t *rgbmap = rgb_underglow_get_bindings(layer);
-    if (rgbmap != NULL) {
-        zmk_rgb_underglow_apply_rgbmap(rgbmap, ZMK_KEYMAP_LEN);
-        zmk_rgb_underglow_transient_on();
+    if (rgbmap != NULL && zmk_rgb_underglow_apply_rgbmap(rgbmap, ZMK_KEYMAP_LEN)) {
+        if (!state.on)
+            zmk_rgb_underglow_transient_on();
         zmk_led_write_pixels();
     } else {
-        zmk_rgb_underglow_transient_off();
+        if (state.on)
+            zmk_rgb_underglow_transient_off();
     }
 }
 #endif /* IS_ENABLED(UNDERGLOW_LAYER_ENABLED) */
