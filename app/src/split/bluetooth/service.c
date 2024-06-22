@@ -25,9 +25,11 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS)
 #include <zmk/events/hid_indicators_changed.h>
 #endif // IS_ENABLED(CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS)
+#include <zmk/split/bluetooth/peripheral_layers.h>
 
 #include <zmk/events/sensor_event.h>
 #include <zmk/sensors.h>
+#include <zmk/events/split_peripheral_layer_changed.h>
 
 #if ZMK_KEYMAP_HAS_SENSORS
 static struct sensor_event last_sensor_event;
@@ -138,6 +140,31 @@ static ssize_t split_svc_update_indicators(struct bt_conn *conn, const struct bt
 
 #endif // IS_ENABLED(CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS)
 
+static uint32_t layers = 0;
+
+static void split_svc_update_layers_callback(struct k_work *work) {
+    LOG_DBG("Setting peripheral layers: %x", layers);
+    // set_peripheral_layers_state(layers);
+    raise_zmk_split_peripheral_layer_changed(
+        (struct zmk_split_peripheral_layer_changed){.layers = layers});
+}
+
+static K_WORK_DEFINE(split_svc_update_layers_work, split_svc_update_layers_callback);
+
+static ssize_t split_svc_update_layers(struct bt_conn *conn, const struct bt_gatt_attr *attr,
+                                       const void *buf, uint16_t len, uint16_t offset,
+                                       uint8_t flags) {
+    if (offset + len > sizeof(uint32_t)) {
+        return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
+    }
+
+    memcpy((uint8_t *)&layers + offset, buf, len);
+
+    k_work_submit(&split_svc_update_layers_work);
+
+    return len;
+}
+
 BT_GATT_SERVICE_DEFINE(
     split_svc, BT_GATT_PRIMARY_SERVICE(BT_UUID_DECLARE_128(ZMK_SPLIT_BT_SERVICE_UUID)),
     BT_GATT_CHARACTERISTIC(BT_UUID_DECLARE_128(ZMK_SPLIT_BT_CHAR_POSITION_STATE_UUID),
@@ -160,7 +187,9 @@ BT_GATT_SERVICE_DEFINE(
                            BT_GATT_CHRC_WRITE_WITHOUT_RESP, BT_GATT_PERM_WRITE_ENCRYPT, NULL,
                            split_svc_update_indicators, NULL),
 #endif // IS_ENABLED(CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS)
-);
+    BT_GATT_CHARACTERISTIC(BT_UUID_DECLARE_128(ZMK_SPLIT_BT_UPDATE_LAYERS_UUID),
+                           BT_GATT_CHRC_WRITE_WITHOUT_RESP, BT_GATT_PERM_WRITE_ENCRYPT, NULL,
+                           split_svc_update_layers, NULL), );
 
 K_THREAD_STACK_DEFINE(service_q_stack, CONFIG_ZMK_SPLIT_BLE_PERIPHERAL_STACK_SIZE);
 

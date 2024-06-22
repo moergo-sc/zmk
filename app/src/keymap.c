@@ -95,6 +95,7 @@ static inline int set_layer_state(uint8_t layer, bool state) {
         if (ret < 0) {
             LOG_WRN("Failed to raise layer state changed (%d)", ret);
         }
+        zmk_split_bt_update_layers(_zmk_keymap_layer_state);
     }
 
     return ret;

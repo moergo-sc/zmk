@@ -19,8 +19,8 @@ class Compiler
 
   def compile(keymap_data, lhs_kconfig_data, rhs_kconfig_data)
     if rhs_kconfig_data && !rhs_kconfig_data.empty?
-      lhs_result, lhs_output = compile_board('glove80_lh', keymap_data:,     kconfig_data: lhs_kconfig_data, include_static_rhs: false)
-      rhs_result, rhs_output = compile_board('glove80_rh', keymap_data: nil, kconfig_data: rhs_kconfig_data, include_static_rhs: false)
+      lhs_result, lhs_output = compile_board('glove80_lh', keymap_data:, kconfig_data: lhs_kconfig_data, include_static_rhs: false)
+      rhs_result, rhs_output = compile_board('glove80_rh', keymap_data:, kconfig_data: rhs_kconfig_data, include_static_rhs: false)
       [
         lhs_result.concat(rhs_result),
         ["LHS Output:", *lhs_output, "RHS Output:", *rhs_output],
@@ -81,7 +81,7 @@ class Compiler
   end
 
   PERMITTED_DTS_SECTIONS = %w[
-    behaviors macros combos conditional_layers keymap underglow-indicators
+    behaviors macros combos conditional_layers keymap underglow-indicators underglow-layer
   ].freeze
 
   def validate_devicetree!(dtsi)

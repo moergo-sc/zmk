@@ -1,0 +1,15 @@
+description: |
+  Allows defining a rgbmap composed of multiple layers
+
+compatible: "zmk,underglow-layer"
+
+child-binding:
+  description: "A layer to be used in a rgbmap"
+
+  properties:
+    bindings:
+      type: array
+      required: true
+    layer-id:
+      type: int
+      required: true
