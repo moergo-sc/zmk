@@ -54,8 +54,8 @@
     underglow_indicators: underglow-indicators {
         compatible  = "zmk,underglow-indicators";
         layer-state = <35 29 23 17 11 6>;
-        bat-lhs     = <36 30 24 18 12 7>;
-        bat-rhs     = <37 31 25 19 13 8>;
+        bat-self    = <36 30 24 18 12 7>;
+        bat-other   = <37 31 25 19 13 8>;
         capslock    = <22>;
         numlock     = <16>;
         scrolllock  = <10>;

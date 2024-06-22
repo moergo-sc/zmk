@@ -6,30 +6,30 @@ description: Underglow indicators
 compatible: "zmk,underglow-indicators"
 
 properties:
-  bat-lhs:
+  bat-self:
     type: array
-    required: true
-  bat-rhs:
+    default: []
+  bat-other:
     type: array
-    required: true
+    default: []
   capslock:
     type: int
-    required: true
+    default: -1
   numlock:
     type: int
-    required: true
+    default: -1
   scrolllock:
     type: int
-    required: true
+    default: -1
   layer-state:
     type: array
-    required: true
+    default: []
   ble-state:
     type: array
-    required: true
+    default: []
   usb-state:
     type: int
-    required: true
+    default: -1
   output-fallback:
     type: int
-    required: true
+    default: -1

@@ -273,8 +273,8 @@ static int zmk_led_generate_status(void) { return 0; }
 
 const uint8_t underglow_layer_state[] = DT_PROP(UNDERGLOW_INDICATORS, layer_state);
 const uint8_t underglow_ble_state[] = DT_PROP(UNDERGLOW_INDICATORS, ble_state);
-const uint8_t underglow_bat_lhs[] = DT_PROP(UNDERGLOW_INDICATORS, bat_lhs);
-const uint8_t underglow_bat_rhs[] = DT_PROP(UNDERGLOW_INDICATORS, bat_rhs);
+const uint8_t underglow_bat_self[] = DT_PROP(UNDERGLOW_INDICATORS, bat_self);
+const uint8_t underglow_bat_other[] = DT_PROP(UNDERGLOW_INDICATORS, bat_other);
 
 #define HEXRGB(R, G, B)                                                                            \
     ((struct led_rgb){                                                                             \
@@ -327,31 +327,32 @@ static int zmk_led_generate_status(void) {
     }
 
     // BATTERY STATUS
-    zmk_led_battery_level(zmk_battery_state_of_charge(), underglow_bat_lhs,
-                          DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_lhs));
+    zmk_led_battery_level(zmk_battery_state_of_charge(), underglow_bat_self,
+                          DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_self));
 
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING)
     uint8_t peripheral_level = 0;
     int rc = zmk_split_get_peripheral_battery_level(0, &peripheral_level);
 
     if (rc == 0) {
-        zmk_led_battery_level(peripheral_level, underglow_bat_rhs,
-                              DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_rhs));
+        zmk_led_battery_level(peripheral_level, underglow_bat_other,
+                              DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_other));
     } else if (rc == -ENOTCONN) {
-        zmk_led_fill(red, underglow_bat_rhs, DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_rhs));
+        zmk_led_fill(red, underglow_bat_other, DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_other));
     } else if (rc == -EINVAL) {
         LOG_ERR("Invalid peripheral index requested for battery level read: 0");
     }
 #endif
 
+#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     // CAPSLOCK/NUMLOCK/SCROLLOCK STATUS
     zmk_hid_indicators_t led_flags = zmk_hid_indicators_get_current_profile();
 
-    if (led_flags & ZMK_LED_CAPSLOCK_BIT)
+    if (led_flags & ZMK_LED_CAPSLOCK_BIT && DT_PROP(UNDERGLOW_INDICATORS, capslock) != -1)
         status_pixels[DT_PROP(UNDERGLOW_INDICATORS, capslock)] = red;
-    if (led_flags & ZMK_LED_NUMLOCK_BIT)
+    if (led_flags & ZMK_LED_NUMLOCK_BIT && DT_PROP(UNDERGLOW_INDICATORS, numlock) != -1)
         status_pixels[DT_PROP(UNDERGLOW_INDICATORS, numlock)] = red;
-    if (led_flags & ZMK_LED_SCROLLLOCK_BIT)
+    if (led_flags & ZMK_LED_SCROLLLOCK_BIT && DT_PROP(UNDERGLOW_INDICATORS, scrolllock) != -1)
         status_pixels[DT_PROP(UNDERGLOW_INDICATORS, scrolllock)] = red;
 
     // LAYER STATUS
@@ -362,7 +363,7 @@ static int zmk_led_generate_status(void) {
 
     struct zmk_endpoint_instance active_endpoint = zmk_endpoints_selected();
 
-    if (!zmk_endpoints_preferred_transport_is_active())
+    if (DT_PROP(UNDERGLOW_INDICATORS, output_fallback) != -1 && !zmk_endpoints_preferred_transport_is_active())
         status_pixels[DT_PROP(UNDERGLOW_INDICATORS, output_fallback)] = red;
 
     int active_ble_profile_index = zmk_ble_active_profile_index();
@@ -382,17 +383,20 @@ static int zmk_led_generate_status(void) {
         }
     }
 
-    enum zmk_usb_conn_state usb_state = zmk_usb_get_conn_state();
-    if (usb_state == ZMK_USB_CONN_HID &&
-        active_endpoint.transport == ZMK_TRANSPORT_USB) { // connected AND active
-        status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = white;
-    } else if (usb_state == ZMK_USB_CONN_HID) { // connected
-        status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = dull_green;
-    } else if (usb_state == ZMK_USB_CONN_POWERED) { // powered
-        status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = red;
-    } else if (usb_state == ZMK_USB_CONN_NONE) { // disconnected
-        status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = lilac;
+    if (DT_PROP(UNDERGLOW_INDICATORS, usb_state) != -1) {
+        enum zmk_usb_conn_state usb_state = zmk_usb_get_conn_state();
+        if (usb_state == ZMK_USB_CONN_HID &&
+            active_endpoint.transport == ZMK_TRANSPORT_USB) { // connected AND active
+            status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = white;
+        } else if (usb_state == ZMK_USB_CONN_HID) { // connected
+            status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = dull_green;
+        } else if (usb_state == ZMK_USB_CONN_POWERED) { // powered
+            status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = red;
+        } else if (usb_state == ZMK_USB_CONN_NONE) { // disconnected
+            status_pixels[DT_PROP(UNDERGLOW_INDICATORS, usb_state)] = lilac;
+        }
     }
+#endif
 
     int16_t blend = 256;
     if (state.status_animation_step < (500 / 25)) {

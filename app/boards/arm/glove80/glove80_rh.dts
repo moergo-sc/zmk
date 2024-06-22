@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-
 #include "glove80.dtsi"
 #include "glove80_rh-pinctrl.dtsi"
 
@@ -18,6 +17,7 @@
         zmk,underglow = &led_strip;
         zmk,backlight = &back_led_backlight;
         zmk,battery   = &vbatt;
+        zmk,underglow-indicators = &underglow_indicators;
     };
 
     back_led_backlight: pwmleds {
@@ -36,6 +36,24 @@
 
     vbatt: vbatt {
         compatible = "zmk,battery-nrf-vddh";
+    };
+
+/*
+  MoErgo 40 LEDs
+
+         10 16 22 28 34
+       6 11 17 23 29 35
+       7 12 18 24 30 36
+       8 13 19 25 31 37
+       9 14 20 26 32 38
+         15 21 27 33 39
+  2 1 0
+  5 4 3
+*/
+
+    underglow_indicators: underglow-indicators {
+        compatible  = "zmk,underglow-indicators";
+        // Default: no indicators. Only `bat-self` is supported at the moment.
     };
 };
 
