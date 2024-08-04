@@ -1,0 +1,5 @@
+config SHIELD_TRACKTYL_LEFT
+    def_bool $(shields_list_contains,tracktyl_left)
+
+config SHIELD_TRACKTYL_RIGHT
+    def_bool $(shields_list_contains,tracktyl_right)

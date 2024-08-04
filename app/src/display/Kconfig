@@ -87,6 +87,7 @@ config LV_FONT_MONTSERRAT_12
 
 endif # ZMK_DISPLAY_STATUS_SCREEN_BUILT_IN
 
+<<<<<<< HEAD
 choice ZMK_LV_FONT_DEFAULT_SMALL
     prompt "Select theme default small font"
     default ZMK_LV_FONT_DEFAULT_SMALL_MONTSERRAT_12
@@ -172,6 +173,21 @@ choice ZMK_LV_FONT_DEFAULT_SMALL
         bool "UNSCII 16 (Perfect monospace font)"
         select LV_FONT_UNSCII_16
 endchoice
+=======
+config ZMK_DISPLAY_FULL_REFRESH_PERIOD
+    int "(Optional) Period to issue a full refresh to the display (in seconds)"
+    default 0
+    help
+      Period in seconds for how often to completely refresh/redraw the whole screen.
+      Most useful for e-ink/EPD displays that require occasional full redraws.
+
+config MYCHANGE_DISPLAY_UPDATE_MO_BEHAVIOR
+    bool "(Opional) flag controlling whether the temporary layer change should be updated on the layer status widget"
+    default y
+    depends on ZMK_DISPLAY
+    help
+      This is useful for EPD display due to the slow fresh rate
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 rsource "widgets/Kconfig"
 

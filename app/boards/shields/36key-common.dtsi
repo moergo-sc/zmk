@@ -1,0 +1,299 @@
+#define DEFAULT 0
+#define COLEMAK 1
+#define NUM     2
+#define SYM     3
+
+&mt {
+   flavor = "tap-preferred";
+   tapping_term_ms = <200>;
+};
+
+/ { 
+    // macros
+    macros {
+      ZMK_MACRO(hello, // hello world
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LS(H) &kp E &kp L &kp L &kp O>
+        , <&kp COMMA>
+        , <&kp W &kp O &kp R &kp L &kp D &kp EXCL>;
+      )
+
+      ZMK_MACRO(encoder, // for encoder switch press
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LS(I) &kp SPACE &kp A &kp M &kp SPACE &kp A &kp SPACE>
+        , <&kp E &kp N &kp C &kp O &kp D &kp E &kp R>;
+      )
+
+      ZMK_MACRO(spc1, // for spacemacs window nav, Alt+M+1
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LA(M) &kp N1>;
+      )
+    
+      ZMK_MACRO(spc2,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LA(M) &kp N2>;
+      )
+    
+      ZMK_MACRO(spc3,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LA(M) &kp N3>;
+      )
+    };
+   
+    // custom shift using mod-morph 
+    behaviors {
+      cmqus: comma_question {
+        compatible = "zmk,behavior-mod-morph";
+        label = "COMMA_QUESTION";
+        #binding-cells = <0>;
+        bindings = <&kp COMMA>, <&kp QUESTION>;
+        mods = <(MOD_LSFT|MOD_RSFT)>;
+      };
+
+      dtild: dot_tilde {
+        compatible = "zmk,behavior-mod-morph";
+        label = "DOT_TILDE";
+        #binding-cells = <0>;
+        bindings = <&kp DOT>, <&kp TILDE>;
+        mods = <(MOD_LSFT|MOD_RSFT)>;
+      };
+    };
+
+    // combos
+    combos {
+        compatible = "zmk,combos";
+        // right hand 
+        combo_esc {
+            timeout-ms = <50>;
+            key-positions = <16 17>;
+            bindings = <&kp ESC>;
+        };
+        
+         combo_lgui {
+            timeout-ms = <50>;
+            key-positions = <5 6>;
+            bindings = <&kp LGUI>;
+        };
+        
+         combo_fullscreen {
+            timeout-ms = <50>;
+            key-positions = <25 26>;
+            bindings = <&kp F11>;
+        };
+        
+         combo_wkspc_up {
+            timeout-ms = <50>;
+            key-positions = <9 19>;
+            bindings = <&kp LC(UP)>;
+        };
+        
+         combo_wkspc_down {
+            timeout-ms = <50>;
+            key-positions = <19 29>;
+            bindings = <&kp LC(DOWN)>;
+        };
+
+         combo_win_up {
+            timeout-ms = <50>;
+            key-positions = <7 8>;
+            bindings = <&kp LS(LG(UP))>;
+        };
+        
+         combo_win_down {
+            timeout-ms = <50>;
+            key-positions = <27 28>;
+            bindings = <&kp LS(LG(DOWN))>;
+        };
+
+         combo_win_left {
+            timeout-ms = <50>;
+            key-positions = <17 18>;
+            bindings = <&kp LS(LG(LEFT))>;
+        };
+
+         combo_win_right {
+            timeout-ms = <50>;
+            key-positions = <9 18>;
+            bindings = <&kp LS(LG(RIGHT))>;
+        };
+ 
+         combo_rdelete {
+            timeout-ms = <50>;
+            key-positions = <15 16>;
+            bindings = <&kp DELETE>;
+        };
+ 
+        // left hand 
+        combo_zoomin {
+            timeout-ms = <50>;
+            key-positions = <3 4>;
+            bindings = <&kp LC(PLUS)>;
+        };
+ 
+        combo_zoomout {
+            timeout-ms = <50>;
+            key-positions = <23 24>;
+            bindings = <&kp LC(MINUS)>;
+        };
+ 
+        combo_pgdn {
+            timeout-ms = <50>;
+            key-positions = <22 23>;
+            bindings = <&kp PG_DN>;
+        };
+ 
+        combo_pgup {
+            timeout-ms = <50>;
+            key-positions = <2 3>;
+            bindings = <&kp PG_UP>;
+        };
+
+        combo_ldelete {
+            timeout-ms = <50>;
+            key-positions = <13 14>;
+            bindings = <&kp DELETE>;
+        };
+
+        // symbols
+        combo_underscore {
+            timeout-ms = <50>;
+            key-positions = <11 12>;
+            bindings = <&kp UNDERSCORE>;
+        };
+
+        combo_minus {
+            timeout-ms = <50>;
+            key-positions = <12 13>;
+            bindings = <&kp MINUS>;
+        };
+
+        // others
+        combo_capswd {
+            timeout-ms = <50>;
+            key-positions = <2 7>;
+            bindings = <&caps_word>;
+        };
+
+        combo_lsym {
+            timeout-ms = <50>;
+            key-positions = <31 34>;
+            bindings = <&tog SYM>;
+        };
+
+        combo_lnum {
+            timeout-ms = <50>;
+            key-positions = <32 33>;
+            bindings = <&tog NUM>;
+        };
+
+        combo_hello {
+            timeout-ms = <50>;
+            key-positions = <30 31>;
+            bindings = <&hello>;
+        };
+
+        // output selection
+        // combo_outusb {
+        //     timeout-ms = <50>;
+        //     key-positions = <4 14>;
+        //     bindings = <&out OUT_USB>;
+        // };
+ 
+        combo_outble {
+            timeout-ms = <50>;
+            key-positions = <4 14>;
+            bindings = <&out OUT_BLE>;
+        };
+
+        combo_outtog {
+            timeout-ms = <50>;
+            key-positions = <4 24>;
+            bindings = <&out OUT_TOG>;
+        };
+
+        // ble selection
+        combo_ble1 {
+            timeout-ms = <50>;
+            key-positions = <14 24>;
+            bindings = <&bt BT_SEL 0>;
+        };
+
+        combo_ble2 {
+            timeout-ms = <50>;
+            key-positions = <13 23>;
+            bindings = <&bt BT_SEL 1>;
+        };
+
+        combo_ble3 {
+            timeout-ms = <50>;
+            key-positions = <12 22>;
+            bindings = <&bt BT_SEL 2>;
+        };
+
+        combo_ble4 {
+            timeout-ms = <50>;
+            key-positions = <11 21>;
+            bindings = <&bt BT_SEL 3>;
+        };
+
+        combo_ble5 {
+            timeout-ms = <50>;
+            key-positions = <10 20>;
+            bindings = <&bt BT_SEL 4>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+                
+     		default_layer {
+            label = "QWRT";
+        		bindings = <
+            		&kp Q &kp W      &kp E     &kp R     &kp T    &kp Y &kp U     &kp I      &kp O       &kp P
+             		&kp A &mt LSFT S &lt SYM D &lt NUM F &kp G    &kp H &lt NUM J &lt SYM K  &mt RSFT L  &kp SQT 
+                &kp Z &kp X      &kp C     &kp V     &kp B    &kp N &kp M     &cmqus     &dtild      &kp SEMI
+                    &encoder  &mt LALT TAB  &mt LCTL SPACE    &mt RCTL RET    &mt RALT BSPC &encoder
+             		>;
+                sensor-bindings = <&inc_dec_kp RIGHT LEFT &inc_dec_kp UP DOWN>;
+		    };
+
+     		colemak_layer {
+            label = "CLMK";
+        		bindings = <
+            		&kp Q &kp W      &kp F     &kp P     &kp B    &kp J &kp L     &kp U     &kp Y      &kp SQT
+             		&kp A &mt LSFT R &lt SYM S &lt NUM T &kp G    &kp M &lt NUM N &lt SYM E &mt RSFT I &kp O
+                &kp Z &kp X      &kp C     &kp D     &kp V    &kp K &kp H     &cmqus    &dtild     &kp SEMI
+                    &encoder  &mt LALT TAB  &mt LCTL SPACE    &mt RCTL RET    &mt RALT BSPC  &encoder
+             		>;
+                sensor-bindings = <&inc_dec_kp RIGHT LEFT &inc_dec_kp UP DOWN>;
+		    };
+
+        number_layer {
+            label = "NUM";
+            bindings = <
+                &bt BT_NXT  &none     &kp UP    &none      &spc1      &kp KP_PLUS     &kp KP_N7 &kp KP_N8 &kp KP_N9 &kp KP_MINUS
+                &bt BT_PRV  &kp LEFT  &kp DOWN  &kp RIGHT  &spc2      &kp KP_MULTIPLY &kp KP_N4 &kp KP_N5 &kp KP_N6 &kp KP_DIVIDE
+                &bt BT_CLR  &none     &none     &none      &spc3      &kp KP_EQUAL    &kp KP_N1 &kp KP_N2 &kp KP_N3 &kp KP_DOT
+                                      &encoder  &spc4      &kp BSPC      &kp RET         &kp KP_N0  &encoder
+            >;
+                  sensor-bindings = <&inc_dec_kp PG_UP PG_DN &inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        symbol_layer {
+            label = "SYM";
+            bindings = <
+                &none     &none    &kp LT    &kp GT   &kp PRCNT   &kp AMPS &kp CARET &kp LBRC &kp RBRC &tog COLEMAK
+                &kp GRAVE &kp EXCL &kp MINUS &kp PLUS &kp EQUAL   &kp PIPE &kp COLON &kp LPAR &kp RPAR &kp AT
+                &none     &none    &kp SLASH &kp STAR &kp BSLH    &kp HASH &kp DLLR  &kp LBKT &kp RBKT &none  
+                                      &encoder  &none    &none       &none    &none  &encoder
+            >;
+                sensor-bindings = <&inc_dec_kp PG_UP PG_DN &inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+        
+   	};
+};

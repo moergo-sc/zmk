@@ -1,0 +1,206 @@
+/*
+ * Copyright (c) 2020 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+#include "arduino_pro_micro_pins.dtsi"
+
+/ {
+	model = "nrfmacro";
+	compatible = "ufan,nrfmacro";
+
+	chosen {
+		zephyr,code-partition = &code_partition;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,console = &cdc_acm_uart;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		blue_led: led_0 {
+			gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>;
+			label = "Blue LED";
+		};
+	};
+
+	vcc_ctrl: ext-power {
+		compatible = "zmk,ext-power-generic";
+		label = "EXT_POWER";
+		control-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
+	};
+
+	vbatt: vbatt {
+		compatible = "zmk,battery-voltage-divider";
+		label = "BATTERY";
+		io-channels = <&adc 2>;
+		output-ohms = <2000000>;
+		full-ohms = <(2000000 + 820000)>;
+	};
+};
+
+&adc {
+	status = "okay";
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&i2c0 {
+	compatible = "nordic,nrf-twi";
+	sda-pin = <15>;
+	scl-pin = <17>;
+};
+
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+	tx-pin = <6>;
+	rx-pin = <8>;
+};
+
+&usbd {
+	status = "okay";
+	cdc_acm_uart: cdc_acm_uart {
+		compatible = "zephyr,cdc-acm-uart";
+		label = "CDC_ACM_0";
+	};
+};
+
+
+&flash0 {
+	/*
+	 * For more information, see:
+	 * http://docs.zephyrproject.org/latest/devices/dts/flash_partitions.html
+	 */
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		sd_partition: partition@0 {
+			label = "softdevice";
+			reg = <0x00000000 0x00026000>;
+		};
+		code_partition: partition@26000 {
+			label = "code_partition";
+			reg = <0x00026000 0x000c6000>;
+		};
+
+		/*
+		 * The flash starting at 0x000ec000 and ending at
+		 * 0x000f3fff is reserved for use by the application.
+		 */
+
+		/*
+		 * Storage partition will be used by FCB/LittleFS/NVS
+		 * if enabled.
+		 */
+		storage_partition: partition@ec000 {
+			label = "storage";
+			reg = <0x000ec000 0x00008000>;
+		};
+
+		boot_partition: partition@f4000 {
+			label = "adafruit_boot";
+			reg = <0x000f4000 0x0000c000>;
+		};
+	};
+};
+
+&spi1 {
+  /* nrfmacro.dts */
+	compatible = "nordic,nrf-spim";
+  sck-pin = <22>;
+  mosi-pin = <7>;
+  cs-gpios = <&gpio1 0 GPIO_ACTIVE_LOW>;
+  // not used, but required by spim binding; can be reuesd in the keymap for normal key press
+  miso-pin = <5>;
+
+  /* shield.dtsi */
+  status = "disabled";
+
+  // spi-device: gooddisplay GDEW0102T4
+  epd: il0323@0 {
+    compatible = "gooddisplay,il0323";
+    reg = <0>;
+    label = "DISPLAY";
+    spi-max-frequency = <4000000>;
+
+    height = <128>;
+    width = <80>;
+    reset-gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
+    dc-gpios    = <&gpio1 2 GPIO_ACTIVE_LOW>;
+    busy-gpios  = <&gpio0 26 GPIO_ACTIVE_LOW>;
+    pwr = [03 00 26 26];
+    cdi = <0xd2>;
+    tcon = <0x22>;
+  }; 
+};
+
+&i2c1 {
+	compatible = "nordic,nrf-twi";
+	sda-pin = <34>;
+	scl-pin = <32>;
+  status = "disabled";
+
+  oled: ssd1306@3c {
+    compatible = "solomon,ssd1306fb";
+    reg = <0x3c>;
+    label = "DISPLAY";
+    width = <128>;
+    height = <32>;
+    segment-offset = <0>;
+    page-offset = <0>;
+    display-offset = <0>;
+    multiplex-ratio = <31>;
+    segment-remap;
+    com-invdir;
+    com-sequential;
+    prechargep = <0x22>;
+  };
+};
+
+nrfmacro_spi: &spi1 {};
+nrfmacro_i2c: &i2c1 {};
+
+// &pro_micro_spi {
+//     status = "disabled";
+//     sck-pin = <26>;
+//     mosi-pin = <12>;
+//     miso-pin = <7>;
+//     cs-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+
+//     // trackpad: trackpad@0 {
+//     //     compatible = "cirque,pinnacle";
+//     //     // status = "okay";
+//     //     reg = <0>;
+//     //     label = "cirque trackpad";
+//     //     spi-max-frequency = <1000000>;
+//     //     dr-gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
+//     //     invert-x;
+//     //     sleep;
+//     //     /* no-taps; */
+//     // };
+
+//     trackball: trackball@0 {
+//         compatible = "pixart,pmw33xx";
+//         reg = <0>;
+//         label = "Pixart PMW3360";
+//         cs-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+//         motswk-gpios = <&gpio1 0 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+//         spi-max-frequency = <2000000>;
+//         cpi = <400>;
+//     };
+// };

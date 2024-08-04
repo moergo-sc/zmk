@@ -126,7 +126,7 @@ static int send_keyboard_report(void) {
     case ZMK_TRANSPORT_USB: {
         int err = zmk_usb_hid_send_keyboard_report();
         if (err) {
-            LOG_ERR("FAILED TO SEND OVER USB: %d", err);
+            LOG_ERR("FAILED TO SEND OVER USB DUE TO KEYBOARD_REPORT: %d   ", err);
         }
         return err;
     }
@@ -154,7 +154,7 @@ static int send_consumer_report(void) {
     case ZMK_TRANSPORT_USB: {
         int err = zmk_usb_hid_send_consumer_report();
         if (err) {
-            LOG_ERR("FAILED TO SEND OVER USB: %d", err);
+            LOG_ERR("FAILED TO SEND OVER USB DUE TO CONSUMER: %d   ", err);
         }
         return err;
     }
@@ -191,6 +191,7 @@ int zmk_endpoints_send_report(uint16_t usage_page) {
     return -ENOTSUP;
 }
 
+<<<<<<< HEAD
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
 int zmk_endpoints_send_mouse_report() {
     switch (current_instance.transport) {
@@ -199,27 +200,56 @@ int zmk_endpoints_send_mouse_report() {
         int err = zmk_usb_hid_send_mouse_report();
         if (err) {
             LOG_ERR("FAILED TO SEND OVER USB: %d", err);
+=======
+int zmk_endpoints_send_mouse_report() {
+    struct zmk_hid_mouse_report *mouse_report = zmk_hid_get_mouse_report();
+
+    switch (current_endpoint) {
+#if IS_ENABLED(CONFIG_ZMK_USB)
+    case ZMK_ENDPOINT_USB: {
+        int err = zmk_usb_hid_send_report((uint8_t *)mouse_report, sizeof(*mouse_report));
+        if (err) {
+            LOG_ERR("FAILED TO SEND OVER USB DUE TO MOUSE: %d   ", err);
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
         }
         return err;
     }
 #endif /* IS_ENABLED(CONFIG_ZMK_USB) */
 
 #if IS_ENABLED(CONFIG_ZMK_BLE)
+<<<<<<< HEAD
     case ZMK_TRANSPORT_BLE: {
         struct zmk_hid_mouse_report *mouse_report = zmk_hid_get_mouse_report();
         int err = zmk_hog_send_mouse_report(&mouse_report->body);
+=======
+    case ZMK_ENDPOINT_BLE: {
+#if defined(CONFIG_ZMK_MOUSE_WORK_QUEUE_DEDICATED) || defined(CONFIG_ZMK_PD_SEND_THREAD_DEDICATED)
+        int err = zmk_hog_send_mouse_report_direct(&mouse_report->body);
+#else
+        int err = zmk_hog_send_mouse_report(&mouse_report->body);
+#endif
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
         if (err) {
             LOG_ERR("FAILED TO SEND OVER HOG: %d", err);
         }
         return err;
     }
 #endif /* IS_ENABLED(CONFIG_ZMK_BLE) */
+<<<<<<< HEAD
     }
 
     LOG_ERR("Unsupported endpoint transport %d", current_instance.transport);
     return -ENOTSUP;
 }
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
+=======
+
+    default:
+        LOG_ERR("Unsupported endpoint %d", current_endpoint);
+        return -ENOTSUP;
+    }
+}
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 #if IS_ENABLED(CONFIG_SETTINGS)
 
@@ -329,9 +359,13 @@ static int zmk_endpoints_init(void) {
 static void disconnect_current_endpoint(void) {
     zmk_hid_keyboard_clear();
     zmk_hid_consumer_clear();
+<<<<<<< HEAD
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
     zmk_hid_mouse_clear();
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
+=======
+    zmk_hid_mouse_clear();
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
     zmk_endpoints_send_report(HID_USAGE_KEY);
     zmk_endpoints_send_report(HID_USAGE_CONSUMER);

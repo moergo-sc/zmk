@@ -1,0 +1,242 @@
+# Electronut Labs Papyr board configuration
+
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+if BOARD_NRFMACRO
+
+config BOARD
+	default "nrfmacro"
+
+# DISPLAY options: oled, epd, lcd, default: no display
+choice
+  prompt "nrfmacro Display option"
+  depends on ZMK_DISPLAY
+  help
+    Specify the type of the display peripheral.
+
+# config NRFMACRO_NO_DISPLAY
+#   bool "No display screen"
+
+config NRFMACRO_EPD_DISPLAY
+  bool "Use epaper display"
+  select SPI
+  select IL0323
+	select LVGL_USE_CONT
+	select LVGL_FONT_MONTSERRAT_26
+	select LVGL_FONT_MONTSERRAT_20
+	select LVGL_FONT_MONTSERRAT_16
+	select LVGL_USE_LABEL
+	select LVGL_USE_IMG
+
+config NRFMACRO_OLED_DISPLAY
+  bool "Ues OLED display"
+  select I2C
+  select SSD1306
+  select SSD1306_REVERSE_MODE
+
+config NRFMACRO_LCD_DISPLAY
+  bool "Use SHARP memory LCD"
+  select SPI
+  select LS0XX
+	select LVGL_USE_CONT
+	select LVGL_FONT_MONTSERRAT_26
+	# select LVGL_FONT_MONTSERRAT_20
+	# select LVGL_FONT_MONTSERRAT_16
+	# select LVGL_USE_LABEL
+	# select LVGL_USE_IMG
+
+endchoice
+
+# Role of the keyboard in split setup, default is master (i.e., central)
+## NOTE: this is a dedicated config option for nrfmacro board, so that all shields
+## using this board can share the some configuration. It's mainly used for controlling
+## which widget to show on different side of the keyboard
+choice
+  prompt "Role of the keyboard"
+  help
+    Specify the role of the keyboard
+
+config NRFMACRO_SHIELD_MASTER
+  bool "master side, in charge of communication with host"
+
+config NRFMACRO_SHIELD_SLAVE
+  bool "slave side, acting as a peripheral to master side"
+
+endchoice
+
+# Rotate the display screen 180 degree (upside down)
+config NRFMACRO_ROTATE_SCREEN
+  bool "rotate the display screen upside down"
+
+# Show product mark on the screen
+config NRFMACRO_SCREEN_MARK_LOGO
+  bool "show the mark logo on the screen"
+
+choice
+  prompt "Keyboard logo on the display screen"
+  help
+    Specify which logo to show on the centre of screen
+
+config NRFMACRO_SCREEN_STANDARD_LOGO
+  bool "Use the standard logo distributed with the firmware source"
+
+config NRFMACRO_SCREEN_CUSTOM_LOGO
+  bool "Use the customized logo designed by yourself"
+
+endchoice
+
+# Customizing margin of the display screen
+config NRFMACRO_SCREEN_TOP_MARGIN
+  int "top margin of display screen in pixel"
+  depends on ZMK_DISPLAY
+  default 2
+
+config NRFMACRO_SCREEN_BOTTOM_MARGIN
+  int "bottom margin of display screen in pixel"
+  depends on ZMK_DISPLAY
+  default 2
+
+config NRFMACRO_SCREEN_LEFT_MARGIN
+  int "left margin of display screen in pixel"
+  depends on ZMK_DISPLAY
+  default 2
+
+config NRFMACRO_SCREEN_RIGHT_MARGIN
+  int "right margin of display screen in pixel"
+  depends on ZMK_DISPLAY
+  default 2
+
+# USB STACK setup
+if USB_DEVICE_STACK
+
+config USB_NRFX
+	default y
+
+endif # USB_DEVICE_STACK
+
+config BT_CTLR
+	default BT
+
+config ZMK_BLE
+	default y
+
+config ZMK_USB
+	default y
+
+# DISPLAY setup
+## common configuration
+if ZMK_DISPLAY
+config ZMK_DISPLAY_DEDICATED_THREAD_STACK_SIZE
+  default 2048
+
+endif # ZMK_DISPLAY
+
+if ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+
+if NRFMACRO_SHIELD_SLAVE
+config LVGL_FONT_MONTSERRAT_16
+    default y
+
+choice LVGL_THEME_DEFAULT_FONT_NORMAL
+    default LVGL_THEME_DEFAULT_FONT_NORMAL_MONTSERRAT_16
+
+endchoice
+
+config LVGL_FONT_MONTSERRAT_12
+    default y
+    
+choice LVGL_THEME_DEFAULT_FONT_SMALL
+    default LVGL_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_12
+
+endchoice
+endif
+
+endif # ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+
+## dedicated configuration
+if LVGL
+
+config LVGL_BITS_PER_PIXEL
+	default 1
+
+choice LVGL_COLOR_DEPTH
+	default LVGL_COLOR_DEPTH_1
+endchoice
+
+config LVGL_USE_CONT
+  default y
+
+## oled display configuration
+if NRFMACRO_OLED_DISPLAY
+config LVGL_HOR_RES_MAX
+	default 128
+
+config LVGL_VER_RES_MAX
+	default 32
+
+config LVGL_VDB_SIZE
+	default 64
+
+config LVGL_DPI
+	default 148
+endif # NRFMACRO_OLED_DISPLAY
+
+## epd display configuration
+if NRFMACRO_EPD_DISPLAY
+config NRFMACRO_EPD_ROTATE_180
+  bool "rotate the epd upside-down"
+
+config LVGL_HOR_RES_MAX
+	default 80
+
+config LVGL_VER_RES_MAX
+	default 128
+
+config LVGL_VDB_SIZE
+	default 100
+
+config LVGL_DPI
+	default 145
+endif # NRFMACRO_EPD_DISPLAY
+
+## memory lcd display configuration
+if NRFMACRO_LCD_DISPLAY
+choice LVGL_THEME_DEFAULT_FONT_SMALL
+    default LVGL_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_36
+endchoice
+
+config LVGL_HOR_RES_MAX
+	default 160
+
+config LVGL_VER_RES_MAX
+	default 68
+
+config LVGL_VDB_SIZE
+	default 16
+
+config LVGL_DPI
+	default 30
+endif # NRFMACRO_LCD_DISPLAY
+
+endif # LVGL
+
+# custom widgets configuration
+menuconfig CUSTOM_WIDGET_BATTERY_STATUS
+	bool "custom battery status widget"
+
+menuconfig CUSTOM_WIDGET_OUTPUT_STATUS
+	bool "custom output status widget"
+
+menuconfig CUSTOM_WIDGET_LAYER_STATUS
+	bool "custom layer status widget"
+
+menuconfig CUSTOM_WIDGET_PERIPHERAL_STATUS
+	bool "custom layer status widget"
+
+# add point device
+config NRFMACRO_POINTDEVICE
+  bool "add support for point device"
+  select SPI
+
+endif # BOARD_NRFMACRO

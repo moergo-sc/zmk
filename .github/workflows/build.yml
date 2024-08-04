@@ -9,8 +9,14 @@ on:
     paths:
       - ".github/workflows/build.yml"
       - "app/**"
+<<<<<<< HEAD
   schedule:
     - cron: "22 4 * * *"
+=======
+#  disabling auto build until fixing all build errors to prevent excessive emails
+#   schedule:
+#     - cron: '22 4 * * *'
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 jobs:
   build:
@@ -24,7 +30,11 @@ jobs:
         include: ${{ fromJSON(needs.compile-matrix.outputs.include-list) }}
     steps:
       - name: Checkout
+<<<<<<< HEAD
         uses: actions/checkout@v4
+=======
+        uses: actions/checkout@v3
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
       - name: Cache west modules
         uses: actions/cache@v4
         env:
@@ -178,7 +188,11 @@ jobs:
       core-include: ${{ steps.core-list.outputs.result }}
     steps:
       - name: Checkout
+<<<<<<< HEAD
         uses: actions/checkout@v4
+=======
+        uses: actions/checkout@v3
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -207,7 +221,11 @@ jobs:
       boards-include: ${{ steps.boards-list.outputs.result }}
     steps:
       - name: Checkout
+<<<<<<< HEAD
         uses: actions/checkout@v4
+=======
+        uses: actions/checkout@v3
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -335,7 +353,11 @@ jobs:
       organized-metadata: ${{ steps.organize-metadata.outputs.result }}
     steps:
       - name: Checkout
+<<<<<<< HEAD
         uses: actions/checkout@v4
+=======
+        uses: actions/checkout@v3
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:

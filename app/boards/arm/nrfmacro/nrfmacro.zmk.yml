@@ -1,0 +1,10 @@
+file_format: "1"
+id: nrfmacro
+name: nrfMacro (epaper verion)
+type: board
+arch: arm
+outputs:
+  - usb
+  - ble
+url: https://github.com/ufan/nrfmacro/
+exposes: [pro_micro]

@@ -14,6 +14,10 @@ properties:
   mods:
     type: int
     required: true
+<<<<<<< HEAD
   keep-mods:
+=======
+  masked_mods:
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
     type: int
     required: false

@@ -214,6 +214,10 @@ config ZMK_BLE_MOUSE_REPORT_QUEUE_SIZE
     int "Max number of mouse HID reports to queue for sending over BLE"
     default 20
 
+config ZMK_BLE_MOUSE_REPORT_QUEUE_SIZE
+	int "Max number of mouse HID reports to queue for sending over BLE"
+	default 20
+
 config ZMK_BLE_CLEAR_BONDS_ON_START
     bool "Configuration that clears all bond information from the keyboard on startup."
     default n
@@ -381,13 +385,26 @@ endmenu
 
 menu "Mouse Options"
 
+<<<<<<< HEAD
 config ZMK_MOUSE
     bool "Enable ZMK mouse emulation"
     default n
+=======
+rsource "src/mouse/Kconfig"
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 #Mouse Options
 endmenu
 
+<<<<<<< HEAD
+=======
+menu "Point Device Options"
+
+rsource "src/point_device/Kconfig"
+
+endmenu
+
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 menu "Power Management"
 
 config ZMK_BATTERY_REPORTING
@@ -536,6 +553,7 @@ config ZMK_USB_LOGGING
 
 if ZMK_USB_LOGGING
 
+<<<<<<< HEAD
 choice USB_CDC_ACM_LOG_LEVEL_CHOICE
     default USB_CDC_ACM_LOG_LEVEL_OFF
 endchoice
@@ -543,6 +561,10 @@ endchoice
 choice USB_DRIVER_LOG_LEVEL_CHOICE
     default USB_DRIVER_LOG_LEVEL_OFF
 endchoice
+=======
+# config ZMK_LOG_LEVEL
+# 	default 1
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 # We do this to avoid log loop where logging to USB generates more log messages.
 

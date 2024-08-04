@@ -1,0 +1,17 @@
+identifier: nrfmacro
+name: nrfmacro
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - adc
+  - usb_device
+  - ble
+  - ieee802154
+  - pwm
+  - watchdog
+  - spi
+  - i2c

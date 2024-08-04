@@ -1,0 +1,402 @@
+/*
+ * Copyright (c) 2020 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/outputs.h>
+#include <dt-bindings/zmk/mouse.h>
+
+#define DEFAULT 0
+#define NUM     1
+#define SYM     2
+#define FUN     3
+#define PTD_CRS     4
+#define PTD_NAV     5
+#define PTD_HOR     6
+#define PTD_VER     7
+#define PTD_FIN     8
+
+&mt {
+   flavor = "tap-preferred";
+   tapping_term_ms = <200>;
+};
+
+/ { 
+    // macros
+    macros {
+    ZMK_MACRO(hello,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp H &kp E &kp L &kp L &kp O>;
+    )
+
+    ZMK_MACRO(encoder,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp E &kp N &kp C &kp O &kp D &kp E &kp R>;
+    )
+
+    ZMK_MACRO(spc1,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LA(M) &kp N1>;
+    )
+    
+    ZMK_MACRO(spc2,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LA(M) &kp N2>;
+    )
+    
+    ZMK_MACRO(spc3,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LA(M) &kp N3>;
+    )
+   
+    ZMK_MACRO(spc4,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LA(M) &kp N4>;
+    )
+
+    ZMK_MACRO(nxt_tab,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LC(TAB)>;
+    )
+
+    ZMK_MACRO(prv_tab,
+        wait-ms = <0>;
+        tap-ms  = <10>;
+        bindings = <&kp LC(LS(TAB))>;
+    )
+    };
+
+    // custom shift using mod-morph 
+    behaviors {
+      cmqus: comma_question {
+        compatible = "zmk,behavior-mod-morph";
+        label = "COMMA_QUESTION";
+        #binding-cells = <0>;
+        bindings = <&kp COMMA>, <&kp QUESTION>;
+        mods = <(MOD_LSFT|MOD_RSFT)>;
+      };
+
+      dtsmi: dot_semi {
+        compatible = "zmk,behavior-mod-morph";
+        label = "DOT_SEMI";
+        #binding-cells = <0>;
+        bindings = <&kp DOT>, <&kp SEMI>;
+        mods = <(MOD_LSFT|MOD_RSFT)>;
+        masked_mods = <(MOD_LSFT|MOD_RSFT)>; // don't send shift
+      };
+    };
+
+    // combos
+    combos {
+        compatible = "zmk,combos";
+        // right hand 
+        combo_esc {
+            timeout-ms = <50>;
+            key-positions = <16 17>;
+            bindings = <&kp ESC>;
+        };
+        
+         combo_lgui {
+            timeout-ms = <50>;
+            key-positions = <5 6>;
+            bindings = <&kp LGUI>;
+        };
+        
+         combo_fullscreen {
+            timeout-ms = <50>;
+            key-positions = <25 26>;
+            bindings = <&kp F11>;
+        };
+        
+         combo_wkspc_up {
+            timeout-ms = <50>;
+            key-positions = <6 7>;
+            bindings = <&kp LG(PG_UP)>;
+        };
+        
+         combo_wkspc_down {
+            timeout-ms = <50>;
+            key-positions = <26 27>;
+            bindings = <&kp LG(PG_DN)>;
+        };
+
+         combo_win_up {
+            timeout-ms = <50>;
+            key-positions = <7 8>;
+            bindings = <&kp LS(LG(PG_UP))>;
+        };
+        
+         combo_win_down {
+            timeout-ms = <50>;
+            key-positions = <27 28>;
+            bindings = <&kp LS(LG(PG_DN))>;
+        };
+
+         combo_win_left {
+            timeout-ms = <50>;
+            key-positions = <17 18>;
+            bindings = <&kp LS(LG(LEFT))>;
+        };
+
+         combo_win_right {
+            timeout-ms = <50>;
+            key-positions = <9 18>;
+            bindings = <&kp LS(LG(RIGHT))>;
+        };
+ 
+         combo_rdelete {
+            timeout-ms = <50>;
+            key-positions = <15 16>;
+            bindings = <&kp DELETE>;
+        };
+ 
+        // left hand 
+         combo_ldelete {
+            timeout-ms = <50>;
+            key-positions = <13 14>;
+            bindings = <&kp DELETE>;
+        };
+ 
+        combo_zoomin {
+            timeout-ms = <50>;
+            key-positions = <3 4>;
+            bindings = <&kp LC(PLUS)>;
+        };
+ 
+        combo_zoomout {
+            timeout-ms = <50>;
+            key-positions = <23 24>;
+            bindings = <&kp LC(MINUS)>;
+        };
+ 
+        combo_pgdn {
+            timeout-ms = <50>;
+            key-positions = <21 22>;
+            bindings = <&kp PG_DN>;
+        };
+ 
+        combo_pgup {
+            timeout-ms = <50>;
+            key-positions = <1 2>;
+            bindings = <&kp PG_UP>;
+        };
+ 
+        combo_mb_lclick {
+            timeout-ms = <50>;
+            key-positions = <12 13>;
+            bindings = <&mkp LCLK>;
+        };
+
+         combo_mb_rclick {
+            timeout-ms = <50>;
+            key-positions = <22 23>;
+            bindings = <&mkp RCLK>;
+        };
+
+         combo_mb_mclick {
+            timeout-ms = <50>;
+            key-positions = <2 3>;
+            bindings = <&mkp MCLK>;
+        };
+ 
+        // symbols
+        combo_underscore {
+            timeout-ms = <50>;
+            key-positions = <11 12>;
+            bindings = <&kp UNDERSCORE>;
+        };
+
+        // others
+        combo_capswd {
+            timeout-ms = <50>;
+            key-positions = <2 7>;
+            bindings = <&caps_word>;
+        };
+
+        // output selection
+        combo_outble {
+            timeout-ms = <50>;
+            key-positions = <4 14>;
+            bindings = <&out OUT_USB>;
+        };
+ 
+        combo_outtog {
+            timeout-ms = <50>;
+            key-positions = <4 24>;
+            bindings = <&out OUT_TOG>;
+        };
+
+        // ble selection
+        combo_ble1 {
+            timeout-ms = <50>;
+            key-positions = <14 24>;
+            bindings = <&bt BT_SEL 0>;
+        };
+
+        combo_ble2 {
+            timeout-ms = <50>;
+            key-positions = <13 23>;
+            bindings = <&bt BT_SEL 1>;
+        };
+
+        combo_ble3 {
+            timeout-ms = <50>;
+            key-positions = <12 22>;
+            bindings = <&bt BT_SEL 2>;
+        };
+
+        combo_ble4 {
+            timeout-ms = <50>;
+            key-positions = <11 21>;
+            bindings = <&bt BT_SEL 3>;
+        };
+
+        combo_ble5 {
+            timeout-ms = <50>;
+            key-positions = <10 20>;
+            bindings = <&bt BT_SEL 4>;
+        };
+    };
+
+// keymap
+    keymap {
+        compatible = "zmk,keymap";
+                
+     		default_layer {
+            label = "CLMK";
+        		bindings = <
+            		&lt PTD_NAV Q     &kp W             &kp F             &kp P           &kp B         &kp J     &kp L               &kp U      &kp Y   &lt PTD_NAV SQT
+             		&lt SYM A         &mt LALT R        &mt LSFT S        &mt LCTL T      &kp G         &kp M     &mt RCTL N          &mt RSFT E &mt RALT I &lt SYM O 
+                &lt PTD_HOR Z     &lt PTD_VER X     &lt PTD_FIN C     &lt PTD_CRS D   &kp V         &kp K     &lt PTD_CRS H       &cmqus     &dtsmi     &lt FUN TAB
+                &none  &none  &hello  &lt FUN BSPC  &lt NUM SPACE                               &lt NUM RET     &lt FUN BSPC  &encoder  &none   &none
+                &none  &none  &none
+             		>;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &slv>;
+                trackball-bindings = <&tmv>;
+		    };
+
+        number_layer {
+            label = "NUM";
+            bindings = <
+                &bt BT_NXT  &mkp MB4  &kp UP    &mkp MB5   &spc1      &kp PLUS    &kp N7  &kp N8  &kp N9  &kp MINUS
+                &bt BT_PRV  &kp LEFT  &kp DOWN  &kp RIGHT  &spc2      &kp ASTRK   &kp N4  &kp N5  &kp N6  &kp FSLH
+                &bt BT_CLR  &prv_tab  &none     &nxt_tab   &spc3      &kp N0      &kp N1  &kp N2  &kp N3  &kp DOT
+                           &none  &none  &hello  &spc4  &kp HOME      &kp END     &kp N0  &encoder  &none  &none
+                &none  &none  &none
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &skp2 LC(MINUS) LC(PLUS)>;
+                trackball-bindings = <&tsl>;
+        };
+
+        symbol_layer {
+            label = "SYM";
+            bindings = <
+                &none     &kp TILDE &kp LT    &kp GT   &kp PRCNT      &kp AMPS  &kp CARET  &kp LBRC  &kp RBRC  &none
+                &kp GRAVE &kp EXCL  &kp MINUS &kp PLUS &kp EQUAL      &kp PIPE  &kp COLON  &kp LPAR  &kp RPAR  &kp AT
+                &none     &none     &kp SLASH &kp STAR &kp BSLH       &kp HASH  &kp DLLR   &kp LBKT  &kp RBKT  &none  
+                             &none  &none  &hello  &none  &none       &none  &none  &encoder  &none  &none
+                &none  &none  &none
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &skp2 LC(LS(TAB)) LC(TAB)>;
+                trackball-bindings = <&tkp BSPC DELETE LC(MINUS) LC(PLUS)>;
+        };
+
+        function_layer {
+            label = "FUN";
+            bindings = <
+                &none  &kp F1  &kp F2  &kp F3  &none       &none &kp F4  &kp F5  &kp F6  &none
+                &none  &kp F7  &kp F8  &kp F9  &none       &none &kp F10 &kp F11 &kp F12 &none
+                &none  &none   &none   &none   &none       &none &none   &none   &none   &none
+                &none  &none   &none   &none   &none       &none &none   &none   &none   &none
+                &none  &none  &none
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &slv>;
+                trackball-bindings = <&tkp_fast RIGHT LEFT DOWN UP>;
+        };
+        
+        ptd_coarse_layer {
+            label = "PTD_COARSE";
+            bindings = <
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &slv>;
+                trackball-bindings = <&tmv_coarse>;
+        };
+
+        ptd_navigation_layer {
+            label = "PTD_NAVIGATION";
+            bindings = <
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &slv>;
+                trackball-bindings = <&tkp LC(TAB) LC(LS(TAB)) LG(PG_UP) LG(PG_DN)>;
+        };
+
+        ptd_horizontal_layer {
+            label = "PTD_HORIZONTAL";
+            bindings = <
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &slv>;
+                trackball-bindings = <&tmv_x>;
+        };
+
+        ptd_vertical_layer {
+            label = "PTD_VERTICAL";
+            bindings = <
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &slv>;
+                trackball-bindings = <&tmv_y>;
+        };
+
+        ptd_fine_layer {
+            label = "PTD_FINE";
+            bindings = <
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans   &trans  &trans       &trans &trans &trans &trans &trans
+                &trans  &trans  &trans
+            >;
+                sensor-bindings = <&inc_dec_kp UP DOWN &inc_dec_kp UP DOWN>;
+                slider-bindings = <&slv &slv>;
+                trackball-bindings = <&tmv_fine>;
+        };
+   	};
+};

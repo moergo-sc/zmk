@@ -20,6 +20,8 @@ bool zmk_keymap_layer_active(uint8_t layer);
 uint8_t zmk_keymap_highest_layer_active(void);
 int zmk_keymap_layer_activate(uint8_t layer);
 int zmk_keymap_layer_deactivate(uint8_t layer);
+int zmk_keymap_layer_activate_noevent(uint8_t layer);
+int zmk_keymap_layer_deactivate_noevent(uint8_t layer);
 int zmk_keymap_layer_toggle(uint8_t layer);
 int zmk_keymap_layer_to(uint8_t layer);
 const char *zmk_keymap_layer_name(uint8_t layer);

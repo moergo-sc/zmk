@@ -1,0 +1,39 @@
+#include "tracktyl.dtsi" // Notice that the main dtsi files are included in the overlay.
+
+&default_transform {
+    col-offset = <0>;
+};
+
+/ {
+    kscan0: kscan0 {
+        compatible = "zmk,kscan-gpio-matrix";
+        label = "KSCAN0";
+
+		diode-direction = "row2col"; // amoeba royale needs to do row2col
+
+		row-gpios
+			= <&pro_micro 7 GPIO_ACTIVE_HIGH>
+            , <&pro_micro 8 GPIO_ACTIVE_HIGH>
+            , <&pro_micro 9 GPIO_ACTIVE_HIGH>
+			, <&pro_micro 10 GPIO_ACTIVE_HIGH>
+            ;
+            col-gpios
+            = <&pro_micro 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&pro_micro 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&pro_micro 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            ;
+	};
+};
+
+// Define encoder pins
+&encoder_left {
+	status = "disabled"; // disable encoders until further hardware impl
+    a-gpios = <&gpio0 31 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+	b-gpios = <&gpio0 29 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+};
+
+&chosen {
+    zmk,battery = &vbatt;
+};

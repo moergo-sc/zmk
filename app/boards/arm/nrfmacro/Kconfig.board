@@ -1,0 +1,8 @@
+# nrfmacro board configuration
+
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+config BOARD_NRFMACRO
+	bool "nrfmacro"
+	depends on SOC_NRF52840_QIAA

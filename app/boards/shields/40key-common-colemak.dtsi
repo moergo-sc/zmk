@@ -1,0 +1,63 @@
+#define DEFAULT 0
+#define QWERT   1
+#define NUM     2
+#define SYM     3
+
+&mt {
+   flavor = "tap-preferred";
+   tapping_term_ms = <200>;
+};
+
+/ { 
+#include "key-common.dtsi"
+
+    keymap {
+        compatible = "zmk,keymap";
+                
+     		default_layer {
+            label = "CLMK";
+        		bindings = <
+            		&kp Q &kp W      &kp F      &kp P      &kp B        &kp J     &kp L      &kp U      &kp Y      &kp SQT
+             		&kp A &mt LSFT R &mt LALT S &mt LCTL T &lt NUM G    &lt NUM M &mt RCTL N &mt RALT E &mt RSFT I &kp O
+                &kp Z &kp X      &kp C      &kp D      &kp V        &kp K     &kp H      &cmqus     &dtsmi     &kp RC(B)
+                &kp KP_N1 &kp KP_N2    &encoder   &kp TAB    &lt SYM SPACE           &lt SYM RET      &kp BSPC   &encoder &kp KP_N3 &kp KP_N4
+             		>;
+                sensor-bindings = <&inc_dec_kp RIGHT LEFT &inc_dec_kp UP DOWN>;
+		    };
+
+     		qwert_layer {
+            label = "QWRT";
+        		bindings = <
+            		&kp Q &kp W      &kp E      &kp R      &kp T        &kp Y     &kp U      &kp I       &kp O       &kp P
+             		&kp A &mt LSFT S &mt LALT D &mt LCTL T &lt NUM G    &lt NUM H &mt RCTL J &mt RALT K  &mt RSFT L  &kp SQT 
+                &kp Z &kp X      &kp C      &kp V      &kp B        &kp N     &kp M      &cmqus      &dtsmi      &kp RC(B)
+                &kp KP_N1 &kp KP_N2    &encoder   &kp TAB    &lt SYM SPACE           &lt SYM RET      &kp BSPC   &encoder &kp KP_N3 &kp KP_N4
+                    &encoder     &kp TAB    &lt SYM SPACE           &lt SYM RET    &kp BSPC   &encoder
+             		>;
+                sensor-bindings = <&inc_dec_kp RIGHT LEFT &inc_dec_kp UP DOWN>;
+		    };
+
+        number_layer {
+            label = "NUM";
+            bindings = <
+                &bt BT_NXT  &prv_tab  &kp UP    &nxt_tab   &spc1      &kp KP_PLUS     &kp KP_N7 &kp KP_N8 &kp KP_N9 &kp KP_MINUS
+                &bt BT_PRV  &kp LEFT  &kp DOWN  &kp RIGHT  &spc2      &kp KP_MULTIPLY &kp KP_N4 &kp KP_N5 &kp KP_N6 &kp KP_DIVIDE
+                &bt BT_CLR  &none     &none     &none      &spc3      &kp KP_EQUAL    &kp KP_N1 &kp KP_N2 &kp KP_N3 &kp KP_DOT
+                &kp KP_N1 &kp KP_N2    &encoder   &spc4   &kp BSPC           &kp RET      &kp KP_N0   &encoder &kp KP_N3 &kp KP_N4
+            >;
+                  sensor-bindings = <&inc_dec_kp PG_UP PG_DN &inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        symbol_layer {
+            label = "SYM";
+            bindings = <
+                &none     &kp TILDE &kp LT    &kp GT   &kp PRCNT   &kp AMPS &kp CARET &kp LBRC &kp RBRC &tog QWERT
+                &kp GRAVE &kp EXCL  &kp MINUS &kp PLUS &kp EQUAL   &kp PIPE &kp COLON &kp LPAR &kp RPAR &kp AT
+                &none     &none     &kp SLASH &kp STAR &kp BSLH    &kp HASH &kp DLLR  &kp LBKT &kp RBKT &none  
+                &none     &none     &encoder  &none    &none    &none    &none  &encoder &none &none
+            >;
+                sensor-bindings = <&inc_dec_kp PG_UP PG_DN &inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+        
+   	};
+};

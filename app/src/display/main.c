@@ -50,7 +50,29 @@ struct k_work_q *zmk_display_work_q() {
 #endif
 }
 
+<<<<<<< HEAD
 void display_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &display_tick_work); }
+=======
+#if CONFIG_ZMK_DISPLAY_FULL_REFRESH_PERIOD > 0
+void full_refresh_work_cb(struct k_work *work) { lv_obj_invalidate(lv_scr_act()); }
+
+K_WORK_DEFINE(full_refresh_work, full_refresh_work_cb);
+
+void full_refresh_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &full_refresh_work); }
+
+K_TIMER_DEFINE(full_refresh_timer, full_refresh_timer_cb, NULL);
+
+#endif
+
+void display_timer_cb() {
+    lv_tick_inc(TICK_MS);
+    k_work_submit_to_queue(zmk_display_work_q(), &display_tick_work);
+}
+
+void blank_display_cb(struct k_work *work) { display_blanking_on(display); }
+
+void unblank_display_cb(struct k_work *work) { display_blanking_off(display); }
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 K_TIMER_DEFINE(display_timer, display_timer_cb, NULL);
 
@@ -74,6 +96,15 @@ static void start_display_updates() {
     }
 
     k_work_submit_to_queue(zmk_display_work_q(), &unblank_display_work);
+<<<<<<< HEAD
+=======
+
+    k_timer_start(&display_timer, K_MSEC(TICK_MS), K_MSEC(TICK_MS));
+#if CONFIG_ZMK_DISPLAY_FULL_REFRESH_PERIOD > 0
+    k_timer_start(&full_refresh_timer, K_SECONDS(CONFIG_ZMK_DISPLAY_FULL_REFRESH_PERIOD),
+                  K_SECONDS(CONFIG_ZMK_DISPLAY_FULL_REFRESH_PERIOD));
+#endif
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 }
 
 static void stop_display_updates() {
@@ -82,6 +113,14 @@ static void stop_display_updates() {
     }
 
     k_work_submit_to_queue(zmk_display_work_q(), &blank_display_work);
+<<<<<<< HEAD
+=======
+
+    k_timer_stop(&display_timer);
+#if CONFIG_ZMK_DISPLAY_FULL_REFRESH_PERIOD > 0
+    k_timer_stop(&full_refresh_timer);
+#endif
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 }
 
 #endif

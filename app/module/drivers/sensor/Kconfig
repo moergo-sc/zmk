@@ -5,6 +5,15 @@ if SENSOR
 
 rsource "battery/Kconfig"
 rsource "ec11/Kconfig"
+<<<<<<< HEAD:app/module/drivers/sensor/Kconfig
 rsource "max17048/Kconfig"
 
 endif # SENSOR
+=======
+
+rsource "cirque_trackpad/Kconfig"
+rsource "pmw33xx/Kconfig"
+rsource "pixart/pmw3360/Kconfig"
+rsource "pixart/paw3395/Kconfig"
+rsource "pixart/pmw3610/Kconfig"
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048:app/drivers/sensor/Kconfig

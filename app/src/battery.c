@@ -13,7 +13,7 @@
 
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
+LOG_MODULE_REGISTER(battery, CONFIG_BATTERY_LOG_LEVEL);
 
 #include <zmk/event_manager.h>
 #include <zmk/battery.h>
@@ -37,24 +37,36 @@ static const struct device *battery;
 static int zmk_battery_update(const struct device *battery) {
     struct sensor_value state_of_charge;
 
+    LOG_INF("update soc");
+
     int rc = sensor_sample_fetch_chan(battery, SENSOR_CHAN_GAUGE_STATE_OF_CHARGE);
 
     if (rc != 0) {
         LOG_DBG("Failed to fetch battery values: %d", rc);
         return rc;
     }
-
+#ifdef CONFIG_ZMK_USB_LOGGING
+    rc = sensor_channel_get(battery, SENSOR_CHAN_ALL, &state_of_charge);
+#else
     rc = sensor_channel_get(battery, SENSOR_CHAN_GAUGE_STATE_OF_CHARGE, &state_of_charge);
+#endif
 
     if (rc != 0) {
         LOG_DBG("Failed to get battery state of charge: %d", rc);
         return rc;
     }
+    else
+      LOG_INF("Latest battery values: %d", state_of_charge.val1);
 
     if (last_state_of_charge != state_of_charge.val1) {
         last_state_of_charge = state_of_charge.val1;
+<<<<<<< HEAD
 #if IS_ENABLED(CONFIG_BT_BAS)
         LOG_DBG("Setting BAS GATT battery level to %d.", last_state_of_charge);
+=======
+
+        LOG_INF("Setting BAS GATT battery level to %d.", last_state_of_charge);
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
         rc = bt_bas_set_battery_level(last_state_of_charge);
 
@@ -81,7 +93,12 @@ static void zmk_battery_work(struct k_work *work) {
 K_WORK_DEFINE(battery_work, zmk_battery_work);
 
 static void zmk_battery_timer(struct k_timer *timer) {
+<<<<<<< HEAD
     k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &battery_work);
+=======
+  LOG_INF("battery timer trigger");
+  k_work_submit(&battery_work);
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 }
 
 K_TIMER_DEFINE(battery_timer, zmk_battery_timer, NULL);
@@ -108,7 +125,22 @@ static int zmk_battery_init(void) {
         return -ENODEV;
     }
 
+<<<<<<< HEAD
     zmk_battery_start_reporting();
+=======
+    int rc = zmk_battery_update(battery);
+
+    if (rc != 0) {
+        LOG_DBG("Failed to update battery value: %d.", rc);
+        return rc;
+    }
+
+    /* k_timer_start(&battery_timer, K_MINUTES(1), K_SECONDS(CONFIG_ZMK_BATTERY_REPORT_INTERVAL)); */
+    k_timer_start(&battery_timer, K_SECONDS(10), K_SECONDS(CONFIG_ZMK_BATTERY_REPORT_INTERVAL));
+
+    LOG_INF("battery thread initiated");
+
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
     return 0;
 }
 

@@ -7,5 +7,9 @@
 /build
 *.DS_Store
 __pycache__
+<<<<<<< HEAD
 .python-version
 .venv
+=======
+*.~undo-tree~
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

@@ -1,0 +1,133 @@
+/ {
+
+  /* trackball move */
+	behaviors {
+		/omit-if-no-ref/ tmv: behavior_trackball_move {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_MOVE";
+			#trackball-binding-cells = <0>;
+      mode = "move-mode";
+      flavor = "default";
+      scale_mode = "dividor";
+      scale_factor = <3>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tmv_fine: behavior_trackball_move_fine {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_MOVE_FINE";
+			#trackball-binding-cells = <0>;
+      mode = "move-mode";
+      flavor = "default";
+      scale_mode = "dividor";
+      scale_factor = <5>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tmv_coarse: behavior_trackball_move_coarse {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_MOVE_COARSE";
+			#trackball-binding-cells = <0>;
+      mode = "move-mode";
+      flavor = "default";
+      scale_mode = "dividor";
+      scale_factor = <1>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tmv_x: behavior_trackball_move_x_only {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_MOVE_X_ONLY";
+			#trackball-binding-cells = <0>;
+      mode = "move-mode";
+      flavor = "x-only";
+      scale_mode = "dividor";
+      scale_factor = <2>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tmv_y: behavior_trackball_move_y_only {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_MOVE_Y_ONLY";
+			#trackball-binding-cells = <0>;
+      mode = "move-mode";
+      flavor = "y-only";
+      scale_mode = "dividor";
+      scale_factor = <2>;
+		};
+	};
+
+  /* trackball scroll */
+	behaviors {
+		/omit-if-no-ref/ tsl: behavior_trackball_scroll {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_SCROLL";
+			#trackball-binding-cells = <0>;
+      mode = "scroll-mode";
+      flavor = "default";
+      scale_mode = "dividor";
+      scale_factor = <5>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tsl_fine: behavior_trackball_scroll_fine {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_SCROLL_FINE";
+			#trackball-binding-cells = <0>;
+      mode = "scroll-mode";
+      flavor = "default";
+      scale_mode = "dividor";
+      scale_factor = <50>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tsl_coarse: behavior_trackball_scroll_coarse {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "TRACKBALL_SCROLL_COARSE";
+			#trackball-binding-cells = <0>;
+      mode = "scroll-mode";
+      flavor = "default";
+      scale_mode = "dividor";
+      scale_factor = <5>;
+		};
+	};
+  /* trackball key press */
+	behaviors {
+		/omit-if-no-ref/ tkp: behavior_trackball_key_press {
+			compatible = "zmk,behavior-point-device-directional";
+			label = "TRACKBALL_KEY_PRESS";
+			#trackball-binding-cells = <4>;
+      mode = "distance-mode";
+      flavor = "2-dim";
+      step_size = <250>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tkp_fast: behavior_trackball_key_press {
+			compatible = "zmk,behavior-point-device-directional";
+			label = "TRACKBALL_KEY_PRESS";
+			#trackball-binding-cells = <4>;
+      mode = "distance-mode";
+      flavor = "2-dim";
+      step_size = <100>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ tkp_dt: behavior_trackball_key_press2 {
+			compatible = "zmk,behavior-point-device-directional";
+			label = "TRACKBALL_KEY_PRESS_2";
+			#trackball-binding-cells = <4>;
+      mode = "time-mode";
+      flavor = "2-dim";
+      step_size = <200>;
+		};
+	};
+};

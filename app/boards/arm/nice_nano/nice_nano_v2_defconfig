@@ -23,5 +23,11 @@ CONFIG_FLASH=y
 CONFIG_FLASH_PAGE_LAYOUT=y
 CONFIG_FLASH_MAP=y
 
+<<<<<<< HEAD
 CONFIG_ZMK_BLE=y
 CONFIG_ZMK_USB=y
+=======
+# added from nrfmacro, not sure if needed for trackball
+CONFIG_CLOCK_CONTROL_NRF=y
+CONFIG_CLOCK_CONTROL_NRF_K32SRC_RC=y
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

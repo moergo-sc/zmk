@@ -12,6 +12,7 @@
 #define ZMK_KEYMAP_HAS_SENSORS DT_NODE_HAS_STATUS(ZMK_KEYMAP_SENSORS_NODE, okay)
 #define ZMK_KEYMAP_SENSORS_BY_IDX(idx) DT_PHANDLE_BY_IDX(ZMK_KEYMAP_SENSORS_NODE, sensors, idx)
 
+<<<<<<< HEAD
 #if ZMK_KEYMAP_HAS_SENSORS
 #define ZMK_KEYMAP_SENSORS_LEN DT_PROP_LEN(ZMK_KEYMAP_SENSORS_NODE, sensors)
 #else
@@ -30,3 +31,11 @@ struct zmk_sensor_channel_data {
     struct sensor_value value;
     enum sensor_channel channel;
 } __packed;
+=======
+#include <drivers/sensor.h>
+
+enum {
+    // Cirque Pinnacle Glide Extend
+    SENSOR_ATTR_PINNACLE_GE = SENSOR_ATTR_PRIV_START,
+};
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

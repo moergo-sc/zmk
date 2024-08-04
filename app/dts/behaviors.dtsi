@@ -20,3 +20,10 @@
 #include <behaviors/backlight.dtsi>
 #include <behaviors/macros.dtsi>
 #include <behaviors/mouse_key_press.dtsi>
+<<<<<<< HEAD
+=======
+#include <behaviors/mouse_move.dtsi>
+#include <behaviors/mouse_scroll.dtsi>
+#include <behaviors/slider.dtsi>
+#include <behaviors/trackball.dtsi>
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

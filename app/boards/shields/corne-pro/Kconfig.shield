@@ -1,0 +1,8 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+config CORNE_PRO_LEFT
+	def_bool $(shields_list_contains,corne-pro_left)
+
+config CORNE_PRO_RIGHT
+	def_bool $(shields_list_contains,corne-pro_right)

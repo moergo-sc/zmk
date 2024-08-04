@@ -11,7 +11,12 @@
 
 int zmk_hog_send_keyboard_report(struct zmk_hid_keyboard_report_body *body);
 int zmk_hog_send_consumer_report(struct zmk_hid_consumer_report_body *body);
+<<<<<<< HEAD
 
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
 int zmk_hog_send_mouse_report(struct zmk_hid_mouse_report_body *body);
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
+=======
+int zmk_hog_send_mouse_report(struct zmk_hid_mouse_report_body *body);
+int zmk_hog_send_mouse_report_direct(struct zmk_hid_mouse_report_body *body);
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

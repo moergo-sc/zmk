@@ -1,0 +1,32 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+if BLADE_RIGHT
+
+config ZMK_KEYBOARD_NAME
+	default "Blade"
+
+config ZMK_SPLIT_BLE_ROLE_CENTRAL
+	default y
+
+endif
+
+if BLADE_LEFT
+config ZMK_KEYBOARD_NAME
+  default "Blade-slave"
+
+endif
+
+if BLADE_LEFT || BLADE_RIGHT
+
+config ZMK_SPLIT
+	default y
+
+config ZMK_USB
+	default y
+
+config NRFMACRO_MARKLOGO_NAME
+  string  "Source file name of the shield mark logo"
+  default "sweepro-marklogo.c"
+endif
+

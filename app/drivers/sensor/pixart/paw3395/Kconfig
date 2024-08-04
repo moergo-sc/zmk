@@ -1,0 +1,119 @@
+# Sensor data simulator
+#
+# Copyright (c) 2019 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+menuconfig PAW3395
+	bool "PAW3395 mouse optical sensor"
+  select SPI
+	help
+	  Enable PAW3395 mouse optical sensor.
+
+if PAW3395
+
+config PAW3395_ENABLE_REST
+  bool "Enable the rest mode of PAW3395"
+  default y
+  help
+    The sensor downshift to rest mode with lower sampling rate
+    and frame rate. This saves power.
+
+config PAW3395_RUN_MODE
+  int "PAW3395's default run mode when power-on"
+  default 0
+  help
+    The power-on run mode of PAW3395.
+    0: high-performance mode
+    1: low-performance mode
+    2: office mode
+    3: gaming mode
+
+config PAW3395_X_CPI
+	int "PAW3395's default CPI in x-axis"
+	default 1600
+	range 50 9000
+	help
+	  Default X-CPI value.
+
+config PAW3395_Y_CPI
+	int "PAW3395's default CPI in y-axis"
+	default 1600
+	range 50 9000
+	help
+	  Default Y-CPI value.
+
+config PAW3395_CPI_DIVIDOR
+	int "PAW3395's default CPI dividor"
+	default 4
+	range 1 100
+	help
+	  Default CPI dividor value.
+
+config PAW3395_REST1_SAMPLE_TIME_MS
+	int "PAW3395's sample time in REST1 stage"
+	default 10
+	range 1 255
+	help
+	  Default REST1 mode sample period in millisecond.
+
+config PAW3395_REST2_SAMPLE_TIME_MS
+	int "PAW3395's sample time in REST2 stage"
+	default 100
+	range 4 1020
+	help
+	  Default REST2 mode sample period in millisecond.
+
+config PAW3395_REST3_SAMPLE_TIME_MS
+	int "PAW3395's sample time in REST3 stage"
+	default 504
+	range 8 2040
+	help
+	  Default REST2 mode sample period in millisecond.
+
+config PAW3395_RUN_DOWNSHIFT_TIME_MS
+	int "PAW3395's default RUN mode downshift time"
+	default 500
+	range 13 3264
+	help
+	  Default RUN mode downshift down time in milliseconds.
+	  Time after which sensor goes from RUN to REST1 mode.
+
+config PAW3395_REST1_DOWNSHIFT_TIME_MS
+	int "PAW3395's default REST1 mode downshift time"
+	default 10000
+	help
+	  Default REST1 mode downshift down time in milliseconds.
+	  Time after which sensor goes from REST1 to REST2 mode.
+
+config PAW3395_REST2_DOWNSHIFT_TIME_MS
+	int "PAW3395's default REST2 mode downshift time"
+	default 600000
+	help
+	  Default REST2 mode downshift down time in milliseconds.
+	  Time after which sensor goes from REST2 to REST3 mode.
+
+choice
+	prompt "Select PAW3395 sensor orientation"
+	default PAW3395_ORIENTATION_0
+
+config PAW3395_ORIENTATION_0
+	bool "PAW3395 not rotated"
+
+config PAW3395_ORIENTATION_90
+	bool "PAW3395 rotated 90 deg clockwise"
+
+config PAW3395_ORIENTATION_180
+	bool "PAW3395 rotated 180 deg clockwise"
+
+config PAW3395_ORIENTATION_270
+	bool "PAW3395 rotated 270 deg clockwise"
+
+endchoice
+
+module = PAW3395
+module-str = PAW3395
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+endif #PAW3395

@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2020 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+ #include <behaviors.dtsi>
+ #include <dt-bindings/zmk/mouse.h>
+ #include <dt-bindings/zmk/keys.h>
+ #include <dt-bindings/zmk/bt.h>
+ #include <dt-bindings/zmk/outputs.h>
+ 
+ / {
+     behaviors {
+         u_mt: u_mt {
+             compatible = "zmk,behavior-hold-tap";
+             label = "U_MT";
+             bindings =
+                 <&kp>,
+                 <&kp>;
+ 
+             #binding-cells = <2>;
+             tapping-term-ms = <200>;
+             flavor = "tap-preferred";
+         };
+         u_lt: u_lt {
+             compatible = "zmk,behavior-hold-tap";
+             label = "U_LT";
+             bindings =
+                 <&mo>,
+                 <&kp>;
+ 
+             #binding-cells = <2>;
+             tapping-term-ms = <200>;
+             flavor = "tap-preferred";
+         };
+         u_out_tog: u_out_tog {
+             compatible = "zmk,behavior-mod-morph";
+             label = "U_OUT_TOG";
+             bindings =
+                 <&out OUT_TOG>,
+                 <&out OUT_USB>;
+ 
+             #binding-cells = <0>;
+             mods = <(MOD_LSFT|MOD_RSFT)>;
+         };
+         u_caps_word: u_caps_word {
+             compatible = "zmk,behavior-mod-morph";
+             label = "U_CAPS_WORD";
+             bindings =
+                 <&caps_word>,
+                 <&kp CAPS>;
+ 
+             #binding-cells = <0>;
+             mods = <(MOD_LSFT|MOD_RSFT)>;
+         };
+     };
+ 
+     keymap {
+         compatible = "zmk,keymap";
+ 
+         default_layer {
+             bindings = <
+              &kp Q          &kp W  &kp E      &kp R          &kp T                &kp Y                &kp U                 &kp I              &kp O          &kp P   &u_mt LGUI A  &u_mt LEFT_ALT S
+ &u_mt LEFT_SHIFT D  &u_mt LCTRL F  &kp G      &kp H  &u_mt RCTRL J  &u_mt RIGHT_SHIFT K    &u_mt RIGHT_ALT L  &u_mt RIGHT_GUI SEMI          &u_lt 6 Z          &kp X          &kp C             &kp V
+              &kp B          &kp N  &kp M  &kp COMMA        &kp DOT        &u_lt 6 SLASH          &u_lt 5 ESC           &u_lt 2 TAB  &u_lt 4 BACKSPACE  &u_lt 3 ENTER  &u_lt 1 SPACE
+             >;
+             trackball-bindings = <&tmv>;
+         };
+ 
+         layer_1 {
+             bindings = <
+              &kp NUMBER_1          &kp NUMBER_2  &kp NUMBER_3  &kp NUMBER_4          &kp NUMBER_5                &kp NUMBER_6                &kp NUMBER_7              &kp NUMBER_8   &kp NUMBER_9  &kp NUMBER_0  &u_mt LGUI NUMBER_1  &u_mt LEFT_ALT NUMBER_2
+ &u_mt LEFT_SHIFT NUMBER_3  &u_mt LCTRL NUMBER_4  &kp NUMBER_5     &kp EQUAL  &u_mt RCTRL NUMBER_4  &u_mt RIGHT_SHIFT NUMBER_5    &u_mt RIGHT_ALT NUMBER_6  &u_mt RIGHT_GUI NUMBER_0   &kp NUMBER_1  &kp NUMBER_2         &kp NUMBER_3             &kp NUMBER_4
+              &kp NUMBER_5             &kp MINUS  &kp NUMBER_1  &kp NUMBER_2          &kp NUMBER_3                &kp NUMBER_0                     &kp ESC                   &kp TAB  &kp BACKSPACE         &none                &none
+             >;
+         };
+ 
+         layer_2 {
+             bindings = <
+     &kp LC(Z)  &kp LC(X)  &kp LC(C)     &kp LC(V)  &kp LC(Y)   &kp INS     &kp HOME     &kp UP    &kp END  &kp PG_UP   &kp LGUI   &kp LALT
+     &kp LSHFT  &kp LCTRL      &none  &u_caps_word   &kp LEFT  &kp DOWN    &kp RIGHT  &kp PG_DN  &kp LC(Z)  &kp LC(X)  &kp LC(C)  &kp LC(V)
+ &kp LS(LC(Z))    &kp DEL    &kp DEL         &none      &none     &none        &none      &none      &none    &kp RET  &kp SPACE
+             >;
+         };
+ 
+         layer_3 {
+             bindings = <
+ &kp LS(EXCL)         &kp LS(AT)  &kp LEFT_BRACE  &kp RIGHT_BRACE  &kp LS(TILDE)   &kp LS(PIPE)        &kp BSLH   &kp LS(DQT)  &kp LS(UNDER)   &kp LS(PLUS)  &kp LS(POUND)  &kp LS(DLLR)
+     &kp LBKT  &kp RIGHT_BRACKET       &kp GRAVE        &kp EQUAL      &kp RCTRL      &kp RSHFT        &kp RALT     &kp MINUS  &kp LS(PRCNT)  &kp LS(CARET)   &kp LS(LPAR)  &kp LS(RPAR)
+ &kp LS(AMPS)       &kp LS(STAR)   &kp LS(COLON)       &kp LS(LT)     &kp LS(GT)  &kp LS(QMARK)    &kp LS(LPAR)  &kp LS(RPAR)        &kp SQT          &none          &none
+             >;
+         };
+ 
+         layer_4 {
+             bindings = <
+    &kp F1     &kp F2     &kp F3   &kp F4   &kp F5           &kp F6     &kp F7   &kp F8   &kp F9   &kp F10         &kp LGUI  &kp LALT
+ &kp LSHFT  &kp LCTRL  &kp K_APP  &kp F11  &kp F12          &kp F13    &kp F14  &kp F15  &kp F16   &kp F17          &kp F18   &kp F19
+   &kp F20    &kp F21    &kp F22  &kp F23  &kp F24  &kp PAUSE_BREAK      &none    &none    &none  &kp SLCK  &kp PAUSE_BREAK
+             >;
+         };
+ 
+         layer_5 {
+             bindings = <
+     &kp LC(Z)        &kp LC(X)  &kp LC(C)     &kp LC(V)  &kp LC(Y)  &kp LOCKING_NUM    &kp KP_N7    &kp KP_N8  &kp KP_N9  &kp KP_MINUS    &kp LGUI   &kp LALT
+     &kp LSHFT        &kp LCTRL    &kp RET  &kp KP_SLASH  &kp KP_N4        &kp KP_N5    &kp KP_N6  &kp KP_PLUS  &kp LC(Z)     &kp LC(X)   &kp LC(C)  &kp LC(V)
+ &kp LS(LC(Z))  &kp KP_ASTERISK     &kp N1        &kp N2     &kp N3          &kp RET        &none        &none      &none     &kp KP_N0  &kp KP_DOT
+             >;
+         };
+ 
+         layer_6 {
+             bindings = <
+   &u_out_tog       &none  &kp C_VOL_UP        &none       &none  &bt BT_SEL 0    &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  &out OUT_BLE  &kp C_PREV
+ &kp C_VOL_DN  &kp C_NEXT   &bootloader  &bootloader  &bt BT_PRV    &bt BT_NXT      &bt BT_CLR         &none         &none      &kp C_PP    &kp C_MUTE  &kp C_STOP
+        &none       &none         &none        &none       &none         &none           &none         &none         &none         &none         &none
+             >;
+         };
+     };
+ };

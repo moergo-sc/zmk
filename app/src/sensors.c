@@ -80,7 +80,19 @@ static void trigger_sensor_data_for_position(uint32_t sensor_index) {
     }
 
     struct sensor_value value;
+<<<<<<< HEAD
     err = sensor_channel_get(item->dev, item->trigger.chan, &value);
+=======
+    err = sensor_channel_get(dev, SENSOR_CHAN_ROTATION, &value);
+    if (err) {
+        LOG_WRN("Failed to get sensor rotation value: %d", err);
+        return;
+    }
+
+    ZMK_EVENT_RAISE(new_zmk_sensor_event((struct zmk_sensor_event){
+        .sensor_number = item->sensor_number, .value = value, .timestamp = k_uptime_get()}));
+}
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
     if (err) {
         LOG_WRN("Failed to get channel data from device %d", err);

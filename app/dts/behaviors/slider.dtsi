@@ -1,0 +1,67 @@
+/*
+ * Copyright (c) 2021 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <dt-bindings/zmk/keys.h>
+
+/ {
+	behaviors {
+		/omit-if-no-ref/ slh: behavior_slider_horizontal {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "SLIDER_HORIZONTAL";
+			#slider-binding-cells = <0>;
+      mode = "scroll-mode";
+      flavor = "x-only";
+      scale_mode = "multiplier";
+      scale_factor = <10>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ slv: behavior_slider_vertical {
+			compatible = "zmk,behavior-point-device-incremental";
+			label = "SLIDER_VERTICAL";
+			#slider-binding-cells = <0>;
+      mode = "scroll-mode";
+      flavor = "y-only";
+      scale_mode = "multiplier";
+      scale_factor = <25>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ skp: behavior_slider_key_press {
+			compatible = "zmk,behavior-point-device-directional";
+			label = "SLIDER_KEY_PRESS";
+			#slider-binding-cells = <2>;
+      mode = "eager-mode";
+      flavor = "1-dim";
+      step_size = <200>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ skp2: behavior_slider_key_press2 {
+			compatible = "zmk,behavior-point-device-directional";
+			label = "SLIDER_KEY_PRESS_2";
+			#slider-binding-cells = <2>;
+      mode = "distance-mode";
+      flavor = "1-dim";
+      step_size = <2>;
+		};
+	};
+
+	behaviors {
+		/omit-if-no-ref/ skp3: behavior_slider_key_press3 {
+			compatible = "zmk,behavior-point-device-directional";
+			label = "SLIDER_KEY_PRESS_3";
+			#slider-binding-cells = <2>;
+      mode = "time-mode";
+      flavor = "1-dim";
+      step_size = <2>;
+		};
+	};
+};
+

@@ -50,6 +50,10 @@
     pinctrl-names = "default", "sleep";
 };
 
+&spi0 {
+	compatible = "nordic,nrf-spim";
+};
+
 &uart0 {
     compatible = "nordic,nrf-uarte";
     current-speed = <115200>;

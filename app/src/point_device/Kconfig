@@ -1,0 +1,86 @@
+# Copyright (c) 2021 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+DT_COMPAT_ZMK_KEYMAP_TRACKBALLS := zmk,keymap-trackballs
+DT_COMPAT_ZMK_KEYMAP_SLIDERS := zmk,keymap-sliders
+
+menuconfig ZMK_POINT_DEVICE
+    bool "Enable support for ZMK general point device"
+    default n
+
+if ZMK_POINT_DEVICE
+
+choice ZMK_PD_WORK_QUEUE
+    prompt "Work queue used to process point device events"
+
+config ZMK_PD_WORK_QUEUE_DEDICATED
+    bool "Use dedicated work queue for point device events"
+
+config ZMK_PD_WORK_QUEUE_SYSTEM
+    bool "Use default system work queue for point device events"
+endchoice
+
+if ZMK_PD_WORK_QUEUE_DEDICATED
+
+config ZMK_PD_DEDICATED_WORK_QUEUE_STACK_SIZE
+    int "Stack size for dedicated point device thread/queue"
+    default 2048
+
+config ZMK_PD_DEDICATED_WORK_QUEUE_PRIORITY
+    int "Thread priority for dedicated point device thread/queue"
+    default 2
+
+endif # ZMK_PD_WORK_QUEUE_DEDICATED
+
+choice ZMK_PD_SEND_THREAD
+    prompt "Thread used to send mouse report"
+
+config ZMK_PD_SEND_THREAD_DEDICATED
+    bool "Use dedicated thread to send mouse report"
+
+config ZMK_PD_SEND_THREAD_SHARED
+    bool "Use default zmk work queue to send mouse report"
+endchoice
+
+if ZMK_PD_SEND_THREAD_DEDICATED
+
+config ZMK_PD_DEDICATED_SEND_THREAD_STACK_SIZE
+    int "Stack size for dedicated point device sending thread"
+    default 2048
+
+config ZMK_PD_DEDICATED_SEND_THREAD_PRIORITY
+    int "Thread priority for dedicated point device sending thread"
+    default -1
+
+endif # ZMK_PD_SEND_THREAD_DEDICATED
+
+config ZMK_BHV_PD_DIR_TIME_WINDOW
+    int "Time window (ms) of directional behavior of point device"
+    default 300
+
+endif # ZMK_POINT_DEVICE
+
+config ZMK_SLIDERS
+	bool
+	default $(dt_compat_enabled,$(DT_COMPAT_ZMK_KEYMAP_SLIDERS))
+  select ZMK_POINT_DEVICE
+
+config ZMK_TRACKBALLS
+	bool
+	default $(dt_compat_enabled,$(DT_COMPAT_ZMK_KEYMAP_TRACKBALLS))
+  select ZMK_POINT_DEVICE
+
+if ZMK_TRACKBALLS
+config ZMK_TRACKBALL_USB_POLL_INTERVAL
+    int "Poll interval in ms under wired connection"
+    default 8
+
+config ZMK_TRACKBALL_BLE_POLL_INTERVAL
+    int "Poll interval in ms under bluetooth connection"
+    default 8
+
+config ZMK_TRACKBALL_POLL_DURATION
+    int "Duration of polling after receiving an interrupt in ms"
+    default 300
+
+endif # ZMK_TRACKBALLS

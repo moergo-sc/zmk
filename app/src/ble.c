@@ -502,6 +502,9 @@ static void connected(struct bt_conn *conn, uint8_t err) {
 
     update_advertising();
 
+    /* LOG_DBG("New connection params: Interval: %d, Latency: %d, RX: %d, TX: %d", info.le.interval, */
+            /* info.le.latency, info.le.phy->rx_phy, info.le.phy->tx_phy); */
+
     if (is_conn_active_profile(conn)) {
         LOG_DBG("Active profile connected");
         k_work_submit(&raise_profile_changed_event_work);
@@ -551,7 +554,11 @@ static void le_param_updated(struct bt_conn *conn, uint16_t interval, uint16_t l
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
+<<<<<<< HEAD
     LOG_DBG("%s: interval %d latency %d timeout %d", addr, interval, latency, timeout);
+=======
+    LOG_INF("%s: interval %d latency %d timeout %d", log_strdup(addr), interval, latency, timeout);
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 }
 
 static struct bt_conn_cb conn_callbacks = {

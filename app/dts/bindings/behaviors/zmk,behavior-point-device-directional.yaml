@@ -1,0 +1,48 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Directional behavior of point devices
+
+compatible: "zmk,behavior-point-device-directional"
+
+properties:
+  label:
+    type: string
+    required: true
+  "#slider-binding-cells":
+    type: int
+    required: false
+    const: 2
+  "#trackball-binding-cells":
+    type: int
+    required: false
+    const: 4
+  mode:
+    type: string
+    required: false
+    default: "distance-mode"
+    enum:
+      - "time-mode"
+      - "distance-mode"
+      - "eager-mode"
+  flavor:
+    type: string
+    required: false
+    default: "2-dim"
+    enum:
+      - "1-dim"
+      - "2-dim"
+  step_size:
+    type: int
+    default: 10
+    description: the threshold to determine one step, unit is ms in time-mode
+
+slider-binding-cells:
+  - param1
+  - param2
+
+trackball-binding-cells:
+  - param1
+  - param2
+  - param3
+  - param4

@@ -1,0 +1,25 @@
+if SHIELD_TRACKTYL_RIGHT
+
+    config ZMK_KEYBOARD_NAME
+        default "Tracktyl"
+
+    config ZMK_SPLIT_BLE_ROLE_CENTRAL
+        default y
+
+endif
+
+if SHIELD_TRACKTYL_LEFT
+
+    config ZMK_KEYBOARD_NAME
+        default "Tracktyl_left"
+endif
+
+if SHIELD_TRACKTYL_LEFT || SHIELD_TRACKTYL_RIGHT
+
+    config ZMK_SPLIT
+        default y
+
+    config ZMK_USB
+        default y
+
+endif

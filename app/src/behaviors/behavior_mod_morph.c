@@ -46,6 +46,10 @@ static int on_mod_morph_binding_pressed(struct zmk_behavior_binding *binding,
     }
 
     if (zmk_hid_get_explicit_mods() & cfg->mods) {
+<<<<<<< HEAD
+=======
+        /* zmk_mod_flags_t trigger_mods = zmk_hid_get_explicit_mods() & cfg->mods; */
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
         zmk_hid_masked_modifiers_set(cfg->masked_mods);
         data->pressed_binding = (struct zmk_behavior_binding *)&cfg->morph_binding;
     } else {
@@ -66,10 +70,15 @@ static int on_mod_morph_binding_released(struct zmk_behavior_binding *binding,
 
     struct zmk_behavior_binding *pressed_binding = data->pressed_binding;
     data->pressed_binding = NULL;
+<<<<<<< HEAD
     int err;
     err = behavior_keymap_binding_released(pressed_binding, event);
     zmk_hid_masked_modifiers_clear();
     return err;
+=======
+    zmk_hid_masked_modifiers_clear();
+    return behavior_keymap_binding_released(pressed_binding, event);
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 }
 
 static const struct behavior_driver_api behavior_mod_morph_driver_api = {
@@ -93,8 +102,13 @@ static int behavior_mod_morph_init(const struct device *dev) { return 0; }
         .normal_binding = _TRANSFORM_ENTRY(0, n),                                                  \
         .morph_binding = _TRANSFORM_ENTRY(1, n),                                                   \
         .mods = DT_INST_PROP(n, mods),                                                             \
+<<<<<<< HEAD
         .masked_mods = COND_CODE_0(DT_INST_NODE_HAS_PROP(n, keep_mods), (DT_INST_PROP(n, mods)),   \
                                    (DT_INST_PROP(n, mods) & ~DT_INST_PROP(n, keep_mods))),         \
+=======
+        .masked_mods = COND_CODE_0(DT_INST_NODE_HAS_PROP(n, masked_mods), (0),                     \
+                                   (DT_INST_PROP(n, masked_mods))),                                \
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
     };                                                                                             \
     static struct behavior_mod_morph_data behavior_mod_morph_data_##n = {};                        \
     BEHAVIOR_DT_INST_DEFINE(n, behavior_mod_morph_init, NULL, &behavior_mod_morph_data_##n,        \

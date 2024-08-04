@@ -1,0 +1,12 @@
+file_format: "1"
+id: sweepro-ce
+name: SweepPro-CE
+type: shield
+url: https://github.com/ufan/mykeyboard
+requires: [pro_micro]
+exposes: [i2c_oled]
+features:
+  - keys:
+siblings:
+  - sweepro-ce_left
+  - sweepro-ce_right

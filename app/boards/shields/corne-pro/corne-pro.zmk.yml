@@ -1,0 +1,12 @@
+file_format: "1"
+id: corne-pro
+name: Corne-Pro
+type: shield
+url: https://github.com/ufan/mykeyboard
+requires: [pro_micro]
+exposes: [i2c_oled]
+features:
+  - keys:
+siblings:
+  - corne-pro_left
+  - corne-pro_right

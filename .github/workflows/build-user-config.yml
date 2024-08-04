@@ -121,6 +121,7 @@ jobs:
         shell: sh -x {0}
         run: west build -s zmk/app -d "${{ env.build_dir }}" -b "${{ matrix.board }}" -- -DZMK_CONFIG=${{ env.base_dir }}/${{ inputs.config_path }} ${{ env.extra_cmake_args }} ${{ matrix.cmake-args }}
 
+<<<<<<< HEAD
       - name: ${{ env.display_name }} Kconfig file
         run: |
           if [ -f "${{ env.build_dir }}/zephyr/.config" ]
@@ -143,6 +144,16 @@ jobs:
             echo "No Devicetree output"
           fi
         if: ${{ !cancelled() }}
+=======
+      - name: ${{ steps.variables.outputs.display-name }} DTS File
+        if: ${{ always() }}
+        run: |
+          if [ -f "build/zephyr/${{ matrix.board }}.dts.pre.tmp" ]; then cat -n build/zephyr/${{ matrix.board }}.dts.pre.tmp; fi
+          if [ -f "build/zephyr/zephyr.dts" ]; then cat -n build/zephyr/zephyr.dts; fi
+
+      - name: ${{ steps.variables.outputs.display-name }} Kconfig file
+        run: grep -v -e "^#" -e "^$" build/zephyr/.config | sort
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
       - name: Rename artifacts
         shell: sh -x {0}

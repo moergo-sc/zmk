@@ -4,8 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 
+<<<<<<< HEAD
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
+=======
+#include <device.h>
+#include <drivers/sensor.h>
+#include <logging/log.h>
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 #include <zmk/split/bluetooth/service.h>
 
@@ -22,18 +28,33 @@ int split_listener(const zmk_event_t *eh) {
     LOG_DBG("");
     const struct zmk_position_state_changed *pos_ev;
     if ((pos_ev = as_zmk_position_state_changed(eh)) != NULL) {
+<<<<<<< HEAD
         if (pos_ev->state) {
             return zmk_split_bt_position_pressed(pos_ev->position);
         } else {
             return zmk_split_bt_position_released(pos_ev->position);
+=======
+        if (pos_ev != NULL) {
+            if (pos_ev->state) {
+                return zmk_split_bt_position_pressed(pos_ev->position);
+            } else {
+                return zmk_split_bt_position_released(pos_ev->position);
+            }
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
         }
     }
 
 #if ZMK_KEYMAP_HAS_SENSORS
     const struct zmk_sensor_event *sensor_ev;
     if ((sensor_ev = as_zmk_sensor_event(eh)) != NULL) {
+<<<<<<< HEAD
         return zmk_split_bt_sensor_triggered(sensor_ev->sensor_index, sensor_ev->channel_data,
                                              sensor_ev->channel_data_size);
+=======
+        if (sensor_ev != NULL) {
+            return zmk_split_bt_sensor_triggered(sensor_ev->sensor_number, sensor_ev->value);
+        }
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
     }
 #endif /* ZMK_KEYMAP_HAS_SENSORS */
     return ZMK_EV_EVENT_BUBBLE;

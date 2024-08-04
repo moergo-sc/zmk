@@ -355,7 +355,11 @@ static const struct kscan_driver_api kscan_direct_api = {
     };                                                                                             \
                                                                                                    \
     DEVICE_DT_INST_DEFINE(n, &kscan_direct_init, NULL, &kscan_direct_data_##n,                     \
+<<<<<<< HEAD:app/module/drivers/kscan/kscan_gpio_direct.c
                           &kscan_direct_config_##n, POST_KERNEL, CONFIG_KSCAN_INIT_PRIORITY,       \
+=======
+                          &kscan_direct_config_##n, POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY, \
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048:app/drivers/kscan/kscan_gpio_direct.c
                           &kscan_direct_api);
 
 DT_INST_FOREACH_STATUS_OKAY(KSCAN_DIRECT_INIT);

@@ -23,3 +23,5 @@
         compatible = "zmk,battery-nrf-vddh";
     };
 };
+
+nice_nano_spi: &spi2 {};

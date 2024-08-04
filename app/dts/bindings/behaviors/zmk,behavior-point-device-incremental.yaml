@@ -1,0 +1,49 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Scroll and move behavior of point devices
+
+compatible: "zmk,behavior-point-device-incremental"
+
+properties:
+  label:
+    type: string
+    required: true
+  "#slider-binding-cells":
+    type: int
+    required: false
+    const: 0
+  "#trackball-binding-cells":
+    type: int
+    required: false
+    const: 0
+  mode:
+    type: string
+    required: false
+    default: "move-mode"
+    enum:
+      - "move-mode"
+      - "scroll-mode"
+  flavor:
+    type: string
+    required: false
+    default: "default"
+    enum:
+      - "default"
+      - "swap"
+      - "x-only"
+      - "y-only"
+  scale_mode:
+    type: string
+    required: false
+    default: "multiplier"
+    enum:
+      - "multiplier"
+      - "dividor"
+  scale_factor:
+    type: int
+    required: false
+    default: 10
+  smoothing:
+    type: boolean
+    description: Add interleaved delta and inertial delta

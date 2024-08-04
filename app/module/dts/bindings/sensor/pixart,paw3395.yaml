@@ -1,0 +1,20 @@
+# Copyright (c) 2022 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+description: |
+  Sensor driver for the pixart PAW3395 optical mouse sensor 
+
+compatible: "pixart,paw3395"
+
+include: spi-device.yaml
+
+properties:
+  label:
+    type: string
+    required: true
+  irq-gpios:
+    type: phandle-array
+    required: true
+  scroll-layer:
+    type: int
+    description: the momentary layer used to modifiy move to scroll
+    required: false

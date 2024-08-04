@@ -1,0 +1,15 @@
+# Copyright (c) 2022 Yong Zhou
+# SPDX-License-Identifier: MIT
+
+description: CAP1203 3-channel capacitive touch sensor
+
+compatible: "zmk,kscan-cap1203"
+
+include: [kscan.yaml, i2c-device.yaml]
+
+properties:
+    invert-direction:
+      type: boolean
+    int-gpios:
+      type: phandle-array
+      required: false

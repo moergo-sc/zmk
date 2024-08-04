@@ -6,9 +6,15 @@
 
 #define DT_DRV_COMPAT zmk_behavior_mouse_key_press
 
+<<<<<<< HEAD
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
+=======
+#include <device.h>
+#include <drivers/behavior.h>
+#include <logging/log.h>
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 
 #include <zmk/behavior.h>
 #include <zmk/event_manager.h>
@@ -24,20 +30,31 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                      struct zmk_behavior_binding_event event) {
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
+<<<<<<< HEAD
     return raise_zmk_mouse_button_state_changed_from_encoded(binding->param1, true,
                                                              event.timestamp);
+=======
+    return ZMK_EVENT_RAISE(
+        zmk_mouse_button_state_changed_from_encoded(binding->param1, true, event.timestamp));
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 }
 
 static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
                                       struct zmk_behavior_binding_event event) {
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
+<<<<<<< HEAD
     return raise_zmk_mouse_button_state_changed_from_encoded(binding->param1, false,
                                                              event.timestamp);
+=======
+    return ZMK_EVENT_RAISE(
+        zmk_mouse_button_state_changed_from_encoded(binding->param1, false, event.timestamp));
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 }
 
 static const struct behavior_driver_api behavior_mouse_key_press_driver_api = {
     .binding_pressed = on_keymap_binding_pressed, .binding_released = on_keymap_binding_released};
 
+<<<<<<< HEAD
 #define MKP_INST(n)                                                                                \
     BEHAVIOR_DT_INST_DEFINE(n, behavior_mouse_key_press_init, NULL, NULL, NULL, POST_KERNEL,       \
                             CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,                                   \
@@ -46,3 +63,13 @@ static const struct behavior_driver_api behavior_mouse_key_press_driver_api = {
 DT_INST_FOREACH_STATUS_OKAY(MKP_INST)
 
 #endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
+=======
+#define KP_INST(n)                                                                                 \
+    DEVICE_DT_INST_DEFINE(n, behavior_mouse_key_press_init, NULL, NULL, NULL,     \
+                          APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,                        \
+                          &behavior_mouse_key_press_driver_api);
+
+DT_INST_FOREACH_STATUS_OKAY(KP_INST)
+
+#endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

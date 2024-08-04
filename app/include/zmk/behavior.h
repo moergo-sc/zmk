@@ -15,6 +15,8 @@ struct zmk_behavior_binding {
     char *behavior_dev;
     uint32_t param1;
     uint32_t param2;
+    uint32_t param3;
+    uint32_t param4;
 };
 
 struct zmk_behavior_binding_event {
@@ -22,6 +24,7 @@ struct zmk_behavior_binding_event {
     uint32_t position;
     int64_t timestamp;
 };
+<<<<<<< HEAD
 
 /**
  * @brief Get a const struct device* for a behavior from its @p name field.
@@ -36,3 +39,5 @@ struct zmk_behavior_binding_event {
  * unrelated node which shares the same name as a behavior.
  */
 const struct device *zmk_behavior_get_binding(const char *name);
+=======
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

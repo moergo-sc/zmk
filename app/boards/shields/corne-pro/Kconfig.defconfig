@@ -1,0 +1,33 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+if CORNE_PRO_LEFT
+
+config ZMK_KEYBOARD_NAME
+	default "Corne-Pro"
+
+config ZMK_SPLIT_BLE_ROLE_CENTRAL
+	default y
+
+endif
+
+if CORNE_PRO_RIGHT
+config ZMK_KEYBOARD_NAME
+  default "Corne-Pro-R"
+
+endif
+
+if CORNE_PRO_LEFT || CORNE_PRO_RIGHT
+
+config ZMK_SPLIT
+	default y
+
+config ZMK_USB
+	default y
+
+config NRFMACRO_MARKLOGO_NAME
+  string  "Source file name of the shield mark logo"
+  default "cornepro-marklogo.c"
+
+endif
+

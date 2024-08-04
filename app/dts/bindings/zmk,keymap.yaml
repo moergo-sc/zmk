@@ -17,9 +17,21 @@ child-binding:
     sensor-bindings:
       type: phandle-array
       required: false
+<<<<<<< HEAD
 
     label:
       type: string
       required: false
       deprecated: true
       description: Deprecated. Use "name" instead.
+=======
+    slider-bindings:
+      type: phandle-array
+      required: false
+    trackball-bindings:
+      type: phandle-array
+      required: false
+    joystick-bindings:
+      type: phandle-array
+      required: false
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048

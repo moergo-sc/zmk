@@ -1,0 +1,12 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: |
+  Collection of trackballs bound in the keymap layers, the layer key is used to switch working mode.
+
+compatible: "zmk,keymap-trackballs"
+
+properties:
+  trackballs:
+    type: phandles
+    required: true

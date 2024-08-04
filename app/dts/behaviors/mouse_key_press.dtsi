@@ -1,8 +1,18 @@
 / {
+<<<<<<< HEAD
     behaviors {
         /omit-if-no-ref/ mkp: mouse_key_press {
             compatible = "zmk,behavior-mouse-key-press";
             #binding-cells = <1>;
         };
     };
+=======
+	behaviors {
+		/omit-if-no-ref/ mkp: behavior_mouse_key_press {
+			compatible = "zmk,behavior-mouse-key-press";
+			label = "MOUSE_KEY_PRESS";
+			#binding-cells = <1>;
+		};
+	};
+>>>>>>> 5591ade36fef72969c7328b61dd0da901d713048
 };

@@ -1,0 +1,12 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: |
+  Collection of sliders bound in the keymap layers, the layer key is used to switch slider mode.
+
+compatible: "zmk,keymap-sliders"
+
+properties:
+  sliders:
+    type: phandles
+    required: true

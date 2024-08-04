@@ -1,7 +1,9 @@
 {
   "files.associations": {
     "*.overlay": "dts",
-    "*.keymap": "dts"
+    "*.keymap": "dts",
+    "usb_conn_state_changed.h": "c",
+    "ble_active_profile_changed.h": "c"
   },
   "python.formatting.provider": "black",
   "[c]": {
