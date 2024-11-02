@@ -152,6 +152,19 @@ static struct led_rgb hsb_to_rgb(struct zmk_led_hsb hsb) {
     return rgb;
 }
 
+#ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
+static int keymap_pos_to_led_index(int pos) {
+    int index = 0;
+    for (int i = 0; i < ZMK_UNDERGLOW_TRANSFORM_LENGTH; i++) {
+        if (index == pos) {
+            return i;
+        }
+        if (underglow_transform[i] != -1 && underglow_transform[i] <= STRIP_NUM_PIXELS * 2) {
+            index++;
+        }
+    }
+    return -1;
+}
 
 static void fade_all_leds(void) {
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
@@ -302,12 +315,30 @@ static void zmk_rgb_underglow_effect_matrix(void) {
     state.animation_step = state.animation_step % (num_pixels * 10);
 }
 
+static void pixels_position_state_changed(const zmk_event_t *eh) {
+    const struct zmk_position_state_changed *pos_ev;
+    if ((pos_ev = as_zmk_position_state_changed(eh)) != NULL && pos_ev->state) {
+#ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
+        int index = keymap_pos_to_led_index(pos_ev->position);
+        if (index == -1) {
+            return;
+        }
+#else
+        int index = pos_ev->position;
+#endif
+        struct zmk_led_hsb color = state.color;
+        color.h = rand() % 360;
+        set_led(0, index, color);
+    }
+}
+
 static const struct rgb_underglow_effect effects[] = {
     {"ZMK_BASE_SOLID", &zmk_rgb_underglow_effect_solid, NULL},
     {"ZMK_BASE_BREATHE", &zmk_rgb_underglow_effect_breathe, NULL},
     {"ZMK_BASE_SPECTRUM", &zmk_rgb_underglow_effect_spectrum, NULL},
     {"ZMK_BASE_SWIRL", &zmk_rgb_underglow_effect_swirl, NULL},
     {"ZMK_BASE_MATRIX", &zmk_rgb_underglow_effect_matrix, NULL},
+    {"ZMK_REACTIVE_GLITTER", &fade_all_leds, &pixels_position_state_changed},
 };
 
 static int zmk_led_generate_status(void);
