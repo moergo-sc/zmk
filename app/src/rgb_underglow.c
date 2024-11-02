@@ -152,6 +152,16 @@ static struct led_rgb hsb_to_rgb(struct zmk_led_hsb hsb) {
     return rgb;
 }
 
+
+static void fade_all_leds(void) {
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        int r = (pixels[i].r > 5) ? pixels[i].r * 0.97 : 0;
+        int g = (pixels[i].g > 5) ? pixels[i].g * 0.97 : 0;
+        int b = (pixels[i].b > 5) ? pixels[i].b * 0.97 : 0;
+        pixels[i] = (struct led_rgb){r : r, g : g, b : b};
+    }
+}
+
 static int get_index(int row, int col) {
 #ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
     int transform_index = row * ZMK_UNDERGLOW_COLS + col;
@@ -254,11 +264,50 @@ static void zmk_rgb_underglow_effect_swirl(void) {
     state.animation_step = state.animation_step % HUE_MAX;
 }
 
+static bool just_dimmed(int row, int col) {
+    double window_start = 0.6;
+    double window_length = 0.1;
+    struct led_rgb led_val = get_led(row, col);
+    struct led_rgb state_col = hsb_to_rgb(hsb_scale_zero_max(state.color));
+    return led_val.r >= state_col.r * window_start && led_val.g >= state_col.g * window_start &&
+           led_val.b >= state_col.b * window_start &&
+           led_val.r <= state_col.r * (window_start + window_length) &&
+           led_val.g <= state_col.g * (window_start + window_length) &&
+           led_val.b <= state_col.b * (window_start + window_length);
+}
+
+static void zmk_rgb_underglow_effect_matrix(void) {
+    fade_all_leds();
+    int num_pixels = STRIP_NUM_PIXELS;
+    if (IS_ENABLED(CONFIG_ZMK_SPLIT)) {
+        num_pixels = num_pixels * 2;
+    }
+
+#ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
+    for (int col = 0; col < ZMK_UNDERGLOW_COLS; col++) {
+        for (int row = 0; row < ZMK_UNDERGLOW_ROWS; row++) {
+            if (just_dimmed(row, col) && row + 1 < ZMK_UNDERGLOW_ROWS) {
+                set_led(row + 1, col, state.color);
+            } else if (row == 0 && rand() % 250 == 0) {
+                set_led(row, col, state.color);
+            }
+        }
+    }
+#else
+    int index = state.animation_step / 10;
+    set_led(0, index, state.color);
+#endif
+
+    state.animation_step++;
+    state.animation_step = state.animation_step % (num_pixels * 10);
+}
+
 static const struct rgb_underglow_effect effects[] = {
     {"ZMK_BASE_SOLID", &zmk_rgb_underglow_effect_solid, NULL},
     {"ZMK_BASE_BREATHE", &zmk_rgb_underglow_effect_breathe, NULL},
     {"ZMK_BASE_SPECTRUM", &zmk_rgb_underglow_effect_spectrum, NULL},
     {"ZMK_BASE_SWIRL", &zmk_rgb_underglow_effect_swirl, NULL},
+    {"ZMK_BASE_MATRIX", &zmk_rgb_underglow_effect_matrix, NULL},
 };
 
 static int zmk_led_generate_status(void);
