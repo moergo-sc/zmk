@@ -1,0 +1,166 @@
+/*
+ * Copyright (c) 2021 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+
+#include "go60.dtsi"
+#include "go60_rh-pinctrl.dtsi"
+
+#include <dt-bindings/led/led.h>
+
+/ {
+    model = "go60_rh";
+    compatible = "go60_rh";
+
+    chosen {
+        zmk,underglow = &led_strip;
+        zmk,backlight = &back_led_backlight;
+        zmk,battery   = &vbatt;
+    };
+
+    back_led_backlight: pwmleds {
+        compatible = "pwm-leds";
+        pwm_led_0 {
+            pwms = <&pwm0 0 PWM_USEC(20) PWM_POLARITY_NORMAL>;
+        };
+    };
+
+    // Node name must match original "EXT_POWER" label to preserve user settings.
+    EXT_POWER {
+        compatible = "zmk,ext-power-generic";
+        control-gpios = <&gpio1 11 GPIO_ACTIVE_HIGH>; /* WS2812_CE */
+        init-delay-ms = <100>;
+    };
+
+    vbatt: vbatt {
+        compatible = "zmk,battery-nrf-vddh";
+    };
+
+    go60_ext: connector {
+        compatible = "moergo,go60-ext";
+        #gpio-cells = <2>;
+        gpio-map-mask = <0xffffffff 0xffffffc0>;
+        gpio-map-pass-thru = <0 0x3f>;
+        gpio-map
+            = <1 0 &gpio0 19 0> /* EXT1 */
+            , <2 0 &gpio0 21 0> /* EXT2 */
+            , <3 0 &gpio0 22 0> /* EXT3 */
+            , <4 0 &gpio0 23 0> /* EXT4 */
+            , <5 0 &gpio0 25 0> /* EXT5 */
+            ;
+    };
+    inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        cirque_split: cirque_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+            device = <&glidepoint>;
+        };
+    };
+
+    // Disabled input listeners for the Cirques, to permit references in the keymap
+    cirque_lh_listener: cirque_lh_listener {
+        compatible = "zmk,input-listener";
+        status = "disabled";
+    };
+
+    cirque_rh_listener: cirque_rh_listener {
+        compatible = "zmk,input-listener";
+        status = "disabled";
+    };
+};
+
+&spi1 {
+    status = "okay";
+
+    compatible = "nordic,nrf-spim";
+    pinctrl-0 = <&spi1_default>;
+    pinctrl-1 = <&spi1_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    cs-gpios = <&go60_ext 5 GPIO_ACTIVE_LOW>;
+
+    glidepoint: glidepoint@0 {
+        compatible = "cirque,pinnacle";
+        reg = <0>;
+        spi-max-frequency = <1000000>;
+        status = "okay";
+        dr-gpios = <&go60_ext 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+
+        sensitivity = "1x";
+        rotate-90;
+        y-invert;
+        no-secondary-tap;
+    };
+};
+
+&spi3 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+
+    pinctrl-0 = <&spi3_default>;
+    pinctrl-1 = <&spi3_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    led_strip: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+
+        /* SPI */
+        reg = <0>; /* ignored, but necessary for SPI bindings */
+        spi-max-frequency = <4000000>;
+
+        /* WS2812 */
+        chain-length = <30>;
+        spi-one-frame = <0x70>;
+        spi-zero-frame = <0x40>;
+
+        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
+    };
+};
+
+&pwm0 {
+    status = "okay";
+    pinctrl-0 = <&pwm0_default>;
+    pinctrl-1 = <&pwm0_sleep>;
+    pinctrl-names = "default", "sleep";
+};
+
+
+&uart0 {
+    status = "okay";
+    compatible = "nordic,nrf-uarte";
+    // Max stable speed with half duplex on nRF52
+    current-speed = <921600>;
+    /* current-speed = <460800>; */
+    /* current-speed = <230400>; */
+    pinctrl-0 = <&uart0_default>;
+    pinctrl-1 = <&uart0_sleep>;
+    pinctrl-names = "default", "sleep";
+};
+
+/* For right hand, the columns are offset by 7 */
+&matrix_transform0 {
+    col-offset = <7>;
+};
+
+&kscan0 {
+    row-gpios
+        = <&gpio1 1 GPIO_ACTIVE_HIGH> // LH ROW1 (KEYSCAN_OUT1)
+        , <&gpio1 3 GPIO_ACTIVE_HIGH> // LH ROW2 (KEYSCAN_OUT2)
+        , <&gpio1 5 GPIO_ACTIVE_HIGH> // LH ROW3 (KEYSCAN_OUT3)
+        , <&gpio1 7 GPIO_ACTIVE_HIGH> // LH ROW4 (KEYSCAN_OUT4)
+        , <&gpio1 6 GPIO_ACTIVE_HIGH> // LH ROW5 (KEYSCAN_OUT5)
+        ;
+    col-gpios
+        = <&gpio0 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // RH Thumb (KEYSCAN_IN1)
+        , <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // RH COL1  (KEYSCAN_IN2)
+        , <&gpio0 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // RH COL2  (KEYSCAN_IN3)
+        , <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // RH COL3  (KEYSCAN_IN4)
+        , <&gpio0 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // RH COL4  (KEYSCAN_IN5)
+        , <&gpio0 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // RH COL5  (KEYSCAN_IN6)
+        , <&gpio0 24 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> // RH COL6  (KEYSCAN_IN7)
+        ;
+};
