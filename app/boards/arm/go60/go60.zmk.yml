@@ -1,0 +1,17 @@
+file_format: "1"
+id: go60
+name: Go60
+type: board
+arch: arm
+url: https://www.moergo.com/
+features:
+  - keys
+  - underglow
+  - backlight
+  - studio
+outputs:
+  - usb
+  - ble
+siblings:
+  - go60_lh
+  - go60_rh
