@@ -188,7 +188,7 @@ static int get_index(int row, int col) {
     return index;
 }
 
-static void set_led(int row, int col, struct zmk_led_hsb color) {
+static void set_led(int row, int col, struct led_rgb color) {
     int index = get_index(row, col);
     if (index < 0 || index > STRIP_NUM_PIXELS * 2) {
         return;
@@ -196,15 +196,15 @@ static void set_led(int row, int col, struct zmk_led_hsb color) {
 #if IS_ENABLED(CONFIG_ZMK_SPLIT)
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     if (index >= STRIP_NUM_PIXELS) {
-        pixels[index % STRIP_NUM_PIXELS] = hsb_to_rgb(hsb_scale_zero_max(color));
+        pixels[index % STRIP_NUM_PIXELS] = color;
     }
 #elif IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     if (index < STRIP_NUM_PIXELS) {
-        pixels[index] = hsb_to_rgb(hsb_scale_zero_max(color));
+        pixels[index] = color;
     }
 #endif
 #else
-    pixels[index % STRIP_NUM_PIXELS] = hsb_to_rgb(hsb_scale_zero_max(color));
+    pixels[index % STRIP_NUM_PIXELS] = color;
 #endif
 }
 
@@ -300,9 +300,9 @@ static void zmk_rgb_underglow_effect_matrix(void) {
     for (int col = 0; col < ZMK_UNDERGLOW_COLS; col++) {
         for (int row = 0; row < ZMK_UNDERGLOW_ROWS; row++) {
             if (just_dimmed(row, col) && row + 1 < ZMK_UNDERGLOW_ROWS) {
-                set_led(row + 1, col, state.color);
+                set_led(row + 1, col, hsb_to_rgb(hsb_scale_zero_max(state.color)));
             } else if (row == 0 && rand() % 250 == 0) {
-                set_led(row, col, state.color);
+                set_led(row, col, hsb_to_rgb(hsb_scale_zero_max(state.color)));
             }
         }
     }
@@ -328,7 +328,7 @@ static void pixels_position_state_changed(const zmk_event_t *eh) {
 #endif
         struct zmk_led_hsb color = state.color;
         color.h = rand() % 360;
-        set_led(0, index, color);
+        set_led(0, index, hsb_to_rgb(hsb_scale_zero_max(color)));
     }
 }
 
