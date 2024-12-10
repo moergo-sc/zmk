@@ -156,10 +156,10 @@ static struct led_rgb hsb_to_rgb(struct zmk_led_hsb hsb) {
 static int keymap_pos_to_led_index(int pos) {
     int index = 0;
     for (int i = 0; i < ZMK_UNDERGLOW_TRANSFORM_LENGTH; i++) {
-        if (index == pos) {
-            return i;
-        }
         if (underglow_transform[i] != -1 && underglow_transform[i] <= STRIP_NUM_PIXELS * 2) {
+            if (index == pos) {
+                return i;
+            }
             index++;
         }
     }
