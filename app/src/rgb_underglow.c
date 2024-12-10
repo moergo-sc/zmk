@@ -58,6 +58,7 @@ static int underglow_transform[] = DT_PROP(ZMK_UNDERGLOW_TRANSFORM_NODE, map);
 #define HUE_MAX 360
 #define SAT_MAX 100
 #define BRT_MAX 100
+#define TICKS_PER_SECOND 30
 static struct led_rgb BLACK = (struct led_rgb){r : 0, g : 0, b : 0};
 
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
@@ -165,6 +166,11 @@ static int keymap_pos_to_led_index(int pos) {
     }
     return -1;
 }
+
+static int keymap_pos_to_row(int pos) { return keymap_pos_to_led_index(pos) / ZMK_UNDERGLOW_COLS; }
+
+static int keymap_pos_to_col(int pos) { return keymap_pos_to_led_index(pos) % ZMK_UNDERGLOW_COLS; }
+#endif
 
 static void fade_all_leds(void) {
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
@@ -332,6 +338,100 @@ static void pixels_position_state_changed(const zmk_event_t *eh) {
     }
 }
 
+#ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+static void light_circle_leds(int x_center, int y_center, int radius, struct led_rgb color) {
+    if (radius == 0) {
+        set_led(y_center, x_center, color);
+        return;
+    }
+    float num_pixels = 4 + (radius - 1) * 8;
+    for (int i = 0; i < num_pixels; i++) {
+        double angle = 2 * M_PI * (i / num_pixels);
+        int x = round(radius * cos(angle)) + x_center;
+        int y = round(radius * sin(angle)) + y_center;
+
+        if (x < ZMK_UNDERGLOW_COLS && y < ZMK_UNDERGLOW_ROWS && x >= 0 && y >= 0) {
+            set_led(y, x, color);
+        }
+    }
+}
+#endif
+
+#ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
+#define RIPPLE_STEPS 100
+#define RIPPLE_LENGTH 5
+#define MAX_RIPPLE_AGE                                                                             \
+    RIPPLE_STEPS *(fmax(ZMK_UNDERGLOW_COLS, ZMK_UNDERGLOW_ROWS) + (RIPPLE_LENGTH + 1) / 2)
+#define MAX_RIPPLES 3
+static int ripple_positions[MAX_RIPPLES];
+static int ripple_ages[MAX_RIPPLES];
+
+static int get_brightness(float stage, int radius) {
+    int x = radius;
+    if (x < fmax(stage - RIPPLE_LENGTH, 0) || x > stage) {
+        return 0;
+    }
+    float val = pow((x + RIPPLE_LENGTH - stage), 2) * log10f(-x + 1 + stage);
+    return fmin(val, RIPPLE_LENGTH) * 100 / RIPPLE_LENGTH;
+}
+
+#endif
+
+static void ripple_position_state_changed(const zmk_event_t *eh) {
+    const struct zmk_position_state_changed *pos_ev;
+    if ((pos_ev = as_zmk_position_state_changed(eh)) != NULL && pos_ev->state) {
+#ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
+        if (keymap_pos_to_row(pos_ev->position) >= 0 && keymap_pos_to_col(pos_ev->position) >= 0) {
+            for (int i = 0; i < MAX_RIPPLES; i++) {
+                if (ripple_positions[i] == -1) {
+                    ripple_positions[i] = pos_ev->position;
+                    ripple_ages[i] = MAX_RIPPLE_AGE;
+                    break;
+                }
+            }
+        }
+#else
+        int index = pos_ev->position;
+        struct zmk_led_hsb color = state.color;
+        color.h = rand() % 360;
+        set_led(0, index, hsb_to_rgb(hsb_scale_zero_max(color)));
+#endif
+    }
+}
+
+static void ripple() {
+    fade_all_leds();
+#ifdef ZMK_UNDERGLOW_TRANSFORM_NODE
+    float seconds_per_ripple = 2;
+    struct zmk_led_hsb color = state.color;
+    color.h = state.animation_step % 360;
+    for (int i = 0; i < MAX_RIPPLES; i++) {
+        if (ripple_positions[i] != -1) {
+            ripple_ages[i] -= (int)(MAX_RIPPLE_AGE / TICKS_PER_SECOND / seconds_per_ripple);
+
+            int stage = (MAX_RIPPLE_AGE - ripple_ages[i]) / 100.0;
+            int min_radius = fmax(stage - RIPPLE_LENGTH, 0);
+
+            for (int j = 0; j < RIPPLE_LENGTH; j++) {
+                color.b = get_brightness(stage, min_radius + j);
+                light_circle_leds(keymap_pos_to_col(ripple_positions[i]),
+                                  keymap_pos_to_row(ripple_positions[i]), min_radius + j,
+                                  hsb_to_rgb(hsb_scale_zero_max(color)));
+            }
+
+            if (ripple_ages[i] < 0) {
+                ripple_positions[i] = -1;
+            }
+        }
+    }
+    state.animation_step = (state.animation_step + 1) % 360;
+#endif
+}
+
 static const struct rgb_underglow_effect effects[] = {
     {"ZMK_BASE_SOLID", &zmk_rgb_underglow_effect_solid, NULL},
     {"ZMK_BASE_BREATHE", &zmk_rgb_underglow_effect_breathe, NULL},
@@ -339,6 +439,7 @@ static const struct rgb_underglow_effect effects[] = {
     {"ZMK_BASE_SWIRL", &zmk_rgb_underglow_effect_swirl, NULL},
     {"ZMK_BASE_MATRIX", &zmk_rgb_underglow_effect_matrix, NULL},
     {"ZMK_REACTIVE_GLITTER", &fade_all_leds, &pixels_position_state_changed},
+    {"ZMK_REACTIVE_RIPPLE", &ripple, &ripple_position_state_changed},
 };
 
 static int zmk_led_generate_status(void);
