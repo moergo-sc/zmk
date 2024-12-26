@@ -1,5 +1,5 @@
 description: |
-  Defines a mapping from keymap logical positions to matrix physical positions
+  Defines a mapping from rgb underglow logical positions to matrix physical positions
 
 compatible: "zmk,underglow-transform"
 
