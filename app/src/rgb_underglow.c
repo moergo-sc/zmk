@@ -76,6 +76,7 @@ struct rgb_underglow_state {
     uint8_t current_effect;
     uint16_t animation_step;
     bool on;
+    bool active;
     bool status_active;
     uint16_t status_animation_step;
 };
@@ -92,6 +93,16 @@ static const struct device *const ext_power = DEVICE_DT_GET(DT_INST(0, zmk_ext_p
 #endif
 
 void zmk_rgb_set_ext_power(void);
+
+static void zmk_rgb_underglow_deactivate(void) {
+    state.active = false;
+    zmk_rgb_set_ext_power();
+}
+
+static void zmk_rgb_underglow_activate(void) {
+    state.active = true;
+    zmk_rgb_set_ext_power();
+}
 
 static struct zmk_led_hsb hsb_scale_min_max(struct zmk_led_hsb hsb) {
     hsb.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN +
@@ -173,11 +184,18 @@ static int keymap_pos_to_col(int pos) { return keymap_pos_to_led_index(pos) % ZM
 #endif
 
 static void fade_all_leds(void) {
+    int active_leds = 0;
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         int r = (pixels[i].r > 5) ? pixels[i].r * 0.97 : 0;
         int g = (pixels[i].g > 5) ? pixels[i].g * 0.97 : 0;
         int b = (pixels[i].b > 5) ? pixels[i].b * 0.97 : 0;
         pixels[i] = (struct led_rgb){r : r, g : g, b : b};
+        if (r > 0 || g > 0 || b > 0) {
+            active_leds++;
+        }
+    }
+    if (state.active && active_leds == 0) {
+        zmk_rgb_underglow_deactivate();
     }
 }
 
@@ -198,6 +216,9 @@ static void set_led(int row, int col, struct led_rgb color) {
     int index = get_index(row, col);
     if (index < 0 || index > STRIP_NUM_PIXELS * 2) {
         return;
+    }
+    if (color.r > 0 || color.g > 0 || color.b > 0) {
+        zmk_rgb_underglow_activate();
     }
 #if IS_ENABLED(CONFIG_ZMK_SPLIT)
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
@@ -784,7 +805,7 @@ void zmk_rgb_set_ext_power(void) {
         LOG_ERR("Unable to examine EXT_POWER: %d", c_power);
         c_power = 0;
     }
-    int desired_state = state.on || state.status_active;
+    int desired_state = (state.on && state.active) || state.status_active;
     // force power off, when battery low (<10%)
     if (state.on && !state.status_active) {
         if (zmk_battery_state_of_charge() < 10) {
@@ -810,7 +831,7 @@ int zmk_rgb_underglow_on(void) {
         return -ENODEV;
 
     state.on = true;
-    zmk_rgb_set_ext_power();
+    zmk_rgb_underglow_activate();
 
     state.animation_step = 0;
     k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(25));
@@ -836,8 +857,7 @@ int zmk_rgb_underglow_off(void) {
 
     k_timer_stop(&underglow_tick);
     state.on = false;
-    zmk_rgb_set_ext_power();
-
+    zmk_rgb_underglow_deactivate();
     return zmk_rgb_underglow_save_state();
 }
 
