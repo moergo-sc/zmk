@@ -3,12 +3,17 @@ description: |
 
 compatible: "zmk,underglow-layer"
 
+properties:
+  pixel-lookup:
+    type: array
+    required: true
+
 child-binding:
   description: "A layer to be used in a rgbmap"
 
   properties:
     bindings:
-      type: array
+      type: phandle-array
       required: true
     layer-id:
       type: int
