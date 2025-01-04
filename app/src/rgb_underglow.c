@@ -17,6 +17,7 @@
 #include <zmk/endpoints.h>
 #include <zmk/keymap.h>
 #include <zmk/matrix.h>
+#include <zmk/behavior.h>
 
 #include <zmk/hid_indicators.h>
 #include <zmk/usb.h>
@@ -25,6 +26,7 @@
 
 #include <zephyr/drivers/led_strip.h>
 #include <drivers/ext_power.h>
+#include <drivers/behavior.h>
 
 #include <zmk/rgb_underglow.h>
 #include <zmk/rgb_underglow_layer.h>
@@ -33,6 +35,8 @@
 #include <zmk/event_manager.h>
 #include <zmk/events/activity_state_changed.h>
 #include <zmk/events/usb_conn_state_changed.h>
+#include <zmk/events/underglow_color_changed.h>
+
 #include <zmk/workqueue.h>
 #include <zmk/events/split_peripheral_layer_changed.h>
 
@@ -52,12 +56,12 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #endif
 
+#define STRIP_CHOSEN DT_CHOSEN(zmk_underglow)
+#define STRIP_NUM_PIXELS DT_PROP(STRIP_CHOSEN, chain_length)
+
 #if DT_HAS_COMPAT_STATUS_OKAY(zmk_underglow_layer) && IS_ENABLED(CONFIG_EXPERIMENTAL_RGB_LAYER)
 #define UNDERGLOW_LAYER_ENABLED 1
 #endif
-
-#define STRIP_CHOSEN DT_CHOSEN(zmk_underglow)
-#define STRIP_NUM_PIXELS DT_PROP(STRIP_CHOSEN, chain_length)
 
 #define HUE_MAX 360
 #define SAT_MAX 100
@@ -455,27 +459,38 @@ static struct led_rgb hex_to_rgb(uint8_t r, uint8_t g, uint8_t b) {
     };
 }
 
-static int zmk_rgb_underglow_apply_rgbmap(uint32_t rgbmap[], size_t rgbmap_len) {
-// TODO: Glove80 specifics, move that part to board's devicetree
-#ifdef LEFT_HALF
-    const uint8_t LED_MATRIX[] = {52, 53, 54, 69, 70, 71, 15, 27, 39, 51, 4,  14, 26, 38,
-                                  50, 68, 3,  13, 25, 37, 49, 67, 2,  12, 24, 36, 48, 66,
-                                  1,  11, 23, 35, 47, 65, 0,  10, 22, 34, 46, 64};
-#else
-    const uint8_t LED_MATRIX[] = {57, 56, 55, 74, 73, 72, 16, 28, 40, 58, 5,  17, 29, 41,
-                                  59, 75, 6,  18, 30, 42, 60, 76, 7,  19, 31, 43, 61, 77,
-                                  8,  20, 32, 44, 62, 78, 9,  21, 33, 45, 63, 79};
-#endif
+static int zmk_rgb_underglow_apply_rgbmap(struct zmk_behavior_binding *bindings,
+                                          size_t rgbmap_len) {
     int rc = 0;
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
-        uint8_t midx = LED_MATRIX[i];
+        uint8_t midx = rgb_pixel_lookup(i);
         if (midx >= ZMK_KEYMAP_LEN) {
             LOG_DBG("out of range");
         } else {
-            pixels[i] = hex_to_rgb((rgbmap[midx] & 0xFF0000) >> 16, (rgbmap[midx] & 0xFF00) >> 8,
-                                   rgbmap[midx] & 0xFF);
-            if (rgbmap[midx] > 0)
+            const struct device *dev = zmk_behavior_get_binding(bindings[midx].behavior_dev);
+
+            if (dev == NULL) {
+                continue;
+            }
+
+            const struct behavior_driver_api *api = (const struct behavior_driver_api *)dev->api;
+
+            if (api->binding_pressed == NULL) {
+                continue;
+            }
+            struct zmk_behavior_binding_event event = {.position = midx,
+                                                       .timestamp = k_uptime_get()};
+
+            int color =
+                api->binding_pressed((const struct zmk_behavior_binding *)&bindings[midx], event);
+
+            if (color > 0) {
+                pixels[i] =
+                    hex_to_rgb((color & 0xFF0000) >> 16, (color & 0xFF00) >> 8, color & 0xFF);
                 rc = 1;
+            } else {
+                pixels[i] = (struct led_rgb){r : 0, g : 0, b : 0};
+            }
         }
     }
     return rc;
@@ -485,7 +500,7 @@ static void zmk_rgb_underglow_set_layer(uint8_t layer) {
     if (!state.layer_enabled)
         return;
 
-    uint32_t *rgbmap = rgb_underglow_get_bindings(layer);
+    const struct zmk_behavior_binding *rgbmap = rgb_underglow_get_bindings(layer);
     if (rgbmap != NULL && zmk_rgb_underglow_apply_rgbmap(rgbmap, ZMK_KEYMAP_LEN)) {
         if (!state.on)
             zmk_rgb_underglow_transient_on();
@@ -914,6 +929,15 @@ static int rgb_underglow_event_listener(const zmk_event_t *eh) {
         zmk_rgb_underglow_set_layer(layer);
         return 0;
     }
+    if (as_zmk_underglow_color_changed(eh)) {
+        const struct zmk_underglow_color_changed *ev = as_zmk_underglow_color_changed(eh);
+        LOG_DBG("refresh layer %d", ev->layers);
+        uint8_t layer = rgb_underglow_top_layer();
+        if ((ev->layers & (BIT(layer))) == BIT(layer)) {
+            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+        }
+        return 0;
+    }
 #endif /* UNDERGLOW_LAYER_ENABLED */
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
@@ -940,6 +964,7 @@ ZMK_SUBSCRIPTION(rgb_underglow, zmk_usb_conn_state_changed);
 
 #if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
 ZMK_SUBSCRIPTION(rgb_underglow, zmk_split_peripheral_layer_changed);
+ZMK_SUBSCRIPTION(rgb_underglow, zmk_underglow_color_changed);
 #endif
 
 SYS_INIT(zmk_rgb_underglow_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
