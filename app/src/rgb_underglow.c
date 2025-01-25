@@ -558,7 +558,11 @@ static int rgb_settings_set(const char *name, size_t len, settings_read_cb read_
             if (state.on) {
                 k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
             }
-
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
+            if (state.layer_enabled) {
+                zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+            }
+#endif
             return 0;
         }
 
@@ -610,7 +614,11 @@ static int zmk_rgb_underglow_init(void) {
     if (state.on) {
         k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(25));
     }
-
+#if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
+    if (state.layer_enabled) {
+        zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+    }
+#endif
     return 0;
 }
 
@@ -893,15 +901,16 @@ static int rgb_underglow_auto_state(bool target_wake_state) {
 
     if (sleep_state.is_awake) {
 #if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
-        zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
-        return 0;
-#else
+        if (state.layer_enabled) {
+            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+            return 0;
+        }
+#endif
         if (sleep_state.rgb_state_before_sleeping) {
             return zmk_rgb_underglow_transient_on();
         } else {
             return zmk_rgb_underglow_transient_off();
         }
-#endif
     } else {
         sleep_state.rgb_state_before_sleeping = state.on;
         return zmk_rgb_underglow_transient_off();
