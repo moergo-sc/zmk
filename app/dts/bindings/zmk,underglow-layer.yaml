@@ -18,3 +18,7 @@ child-binding:
     layer-id:
       type: int
       required: true
+    fade-delay:
+      type: int
+      required: false
+      default: -1

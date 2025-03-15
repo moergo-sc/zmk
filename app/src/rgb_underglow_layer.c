@@ -24,6 +24,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #define UNDERGLOW_LAYER_ENABLED
 #define LAYER_ID(node) DT_PROP(node, layer_id)
+#define FADE_DELAY(node) DT_PROP(node, fade_delay)
 
 #define TRANSFORMED_RGB_LAYER(node)                                                                \
     {COND_CODE_1(DT_NODE_HAS_PROP(node, bindings),                                                 \
@@ -39,6 +40,7 @@ RGBMAP_VAR(zmk_rgbmap, COND_CODE_1(IS_ENABLED(CONFIG_ZMK_KEYMAP_SETTINGS_STORAGE
 const int pixel_lookup_table[] = DT_INST_PROP(0, pixel_lookup);
 
 static int zmk_rgbmap_ids[ZMK_RGBMAP_LAYERS_LEN] = {DT_INST_FOREACH_CHILD_SEP(0, LAYER_ID, (, ))};
+static int zmk_rgbmap_fds[ZMK_RGBMAP_LAYERS_LEN] = {DT_INST_FOREACH_CHILD_SEP(0, FADE_DELAY, (, ))};
 
 const int rgb_pixel_lookup(int idx) { return pixel_lookup_table[idx]; };
 
@@ -50,6 +52,8 @@ const int zmk_rgbmap_id(uint8_t layer) {
     }
     return -1;
 }
+
+const int zmk_rgbmap_fade_delay(uint8_t layer) { return zmk_rgbmap_fds[zmk_rgbmap_id(layer)]; }
 
 const struct zmk_behavior_binding *rgb_underglow_get_bindings(uint8_t layer) {
     int rgblayer = zmk_rgbmap_id(layer);
