@@ -159,7 +159,13 @@ let
 
     firmwareFlags="-DMOERGO_FIRMWARE_VERSION=${firmwareVersion};-DMOERGO_FIRMWARE_VERSION_MAJOR=$firmwareMajor;-DMOERGO_FIRMWARE_VERSION_MINOR=$firmwareMinor;-DMOERGO_FIRMWARE_VERSION_PATCH=$firmwarePatch"
 
-    cmake -G Ninja -S ${zmk'.src}/app ${lib.escapeShellArgs zmk'.cmakeFlags} "-DUSER_CACHE_DIR=/tmp/.cache" "-DBOARD=$board" "-DBUILD_VERSION=${revision}" "-DDTS_EXTRA_CPPFLAGS=$firmwareFlags" "''${cmakeExtraFlags[@]}"
+    cmake -G Ninja -S ${zmk'.src}/app ${lib.escapeShellArgs zmk'.cmakeFlags} \
+      "-DUSER_CACHE_DIR=/tmp/.cache" \
+      "-DBOARD=$board" \
+      "-DBUILD_VERSION=${revision}" \
+      "-DDTS_EXTRA_CPPFLAGS=$firmwareFlags" \
+      "-DEXTRA_DTC_OVERLAY_FILE=${zmk'.src}/app/snippets/zmk-usb-logging/zmk-usb-logging.overlay" \
+      "''${cmakeExtraFlags[@]}"
 
     ninja
 
