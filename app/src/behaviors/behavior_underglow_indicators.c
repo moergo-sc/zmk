@@ -61,8 +61,8 @@ static struct underglow_indicators_data underglow_indicators_data = {.indicators
 static int underglow_indicators_listener(const zmk_event_t *eh) {
     const struct zmk_hid_indicators_changed *ev = as_zmk_hid_indicators_changed(eh);
     underglow_indicators_data.indicators = ev->indicators;
-    raise_zmk_underglow_color_changed(
-        (struct zmk_underglow_color_changed){.layers = underglow_indicators_data.layers});
+    raise_zmk_underglow_color_changed((struct zmk_underglow_color_changed){
+        .layers = underglow_indicators_data.layers, .wakeup = true});
 
     return ZMK_EV_EVENT_BUBBLE;
 }

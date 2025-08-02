@@ -59,8 +59,8 @@ ZMK_LISTENER(behavior_underglow_battery, underglow_battery_listener);
 ZMK_SUBSCRIPTION(behavior_underglow_battery, zmk_battery_state_changed);
 
 static int underglow_battery_listener(const zmk_event_t *eh) {
-    raise_zmk_underglow_color_changed(
-        (struct zmk_underglow_color_changed){.layers = underglow_battery_data.layers});
+    raise_zmk_underglow_color_changed((struct zmk_underglow_color_changed){
+        .layers = underglow_battery_data.layers, .wakeup = false});
 
     return ZMK_EV_EVENT_BUBBLE;
 }
