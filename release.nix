@@ -67,6 +67,7 @@ let
       };
     };
     zmk_glove80_rh = zmk.override { board = "glove80_rh"; };
+    zmk_go60_rh = zmk.override { board = "go60_rh"; };
     realpath_coreutils = if pkgs.stdenv.isDarwin then pkgs.coreutils else pkgs.busybox;
   in pkgs.writeShellScriptBin "compileZmk" ''
     set -eo pipefail
@@ -121,6 +122,9 @@ let
       case "$board" in
       glove80_lh)
         merge_rhs_firmware="${zmk_glove80_rh}/zmk.uf2"
+        ;;
+      go60_lh)
+        merge_rhs_firmware="${zmk_go60_rh}/zmk.uf2"
         ;;
       *)
         echo "No pre-built RHS exists to merge with specified board '$board'" >&2
@@ -195,6 +199,18 @@ let
     cd /tmp/build
 
     compileZmk -b glove80_rh -k ${zmk.src}/app/boards/arm/glove80/glove80.keymap
+
+    rm -fr /tmp/build
+    mkdir /tmp/build
+    cd /tmp/build
+
+    compileZmk -b go60_lh -k ${zmk.src}/app/boards/arm/go60/go60.keymap
+
+    rm -fr /tmp/build
+    mkdir /tmp/build
+    cd /tmp/build
+
+    compileZmk -b go60_rh -k ${zmk.src}/app/boards/arm/go60/go60.keymap
   '';
 
   entrypoint = pkgs.writeShellScriptBin "entrypoint" ''
