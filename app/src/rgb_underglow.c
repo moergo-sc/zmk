@@ -61,7 +61,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #if DT_HAS_COMPAT_STATUS_OKAY(zmk_underglow_layer) && IS_ENABLED(CONFIG_EXPERIMENTAL_RGB_LAYER)
 #define UNDERGLOW_LAYER_ENABLED 1
-static void zmk_rgb_underglow_set_layer(uint8_t layer);
+static void zmk_rgb_underglow_set_layer(uint8_t layer, bool wakeup);
 #endif
 
 #define HUE_MAX 360
@@ -518,7 +518,7 @@ static int rgb_settings_set(const char *name, size_t len, settings_read_cb read_
             }
 #if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
             if (state.layer_enabled) {
-                zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+                zmk_rgb_underglow_set_layer(rgb_underglow_top_layer(), true);
             }
 #endif
             return 0;
@@ -573,7 +573,7 @@ static int zmk_rgb_underglow_init(void) {
     }
 #if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
     if (state.layer_enabled) {
-        zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+        zmk_rgb_underglow_set_layer(rgb_underglow_top_layer(), true);
     }
 #endif
     return 0;
@@ -721,7 +721,7 @@ static struct led_rgb hex_to_rgb(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 static int zmk_rgb_underglow_apply_rgbmap(const struct zmk_behavior_binding *bindings,
-                                          size_t rgbmap_len) {
+                                          size_t rgbmap_len, uint8_t layer) {
     int rc = 0;
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         uint8_t midx = rgb_pixel_lookup(i);
@@ -739,8 +739,8 @@ static int zmk_rgb_underglow_apply_rgbmap(const struct zmk_behavior_binding *bin
             if (api->binding_pressed == NULL) {
                 continue;
             }
-            struct zmk_behavior_binding_event event = {.position = midx,
-                                                       .timestamp = k_uptime_get()};
+            struct zmk_behavior_binding_event event = {
+                .position = midx, .layer = layer, .timestamp = k_uptime_get()};
 
             int color = api->binding_pressed((struct zmk_behavior_binding *)&bindings[midx], event);
 
@@ -756,15 +756,20 @@ static int zmk_rgb_underglow_apply_rgbmap(const struct zmk_behavior_binding *bin
     return rc;
 }
 
-static void zmk_rgb_underglow_set_layer(uint8_t layer) {
+static void zmk_rgb_underglow_set_layer(uint8_t layer, bool wakeup) {
     LOG_DBG("state.layer: %d state.on: %d", state.layer_enabled, state.on);
     if (!state.layer_enabled)
         return;
 
     const struct zmk_behavior_binding *rgbmap = rgb_underglow_get_bindings(layer);
-    if (rgbmap != NULL && zmk_rgb_underglow_apply_rgbmap(rgbmap, ZMK_KEYMAP_LEN)) {
-        if (!state.on)
+    if (rgbmap != NULL && zmk_rgb_underglow_apply_rgbmap(rgbmap, ZMK_KEYMAP_LEN, layer)) {
+        if (!state.on) {
+            if (!wakeup) {
+                LOG_DBG("rgb off and no wakeup, abort refresh");
+                return;
+            }
             zmk_rgb_underglow_transient_on();
+        }
         k_timer_stop(&underglow_tick);
         state.animation_step = 0;
         int fade_delay = zmk_rgbmap_fade_delay(layer);
@@ -930,7 +935,7 @@ static int rgb_underglow_auto_state(bool target_wake_state) {
     if (sleep_state.is_awake) {
 #if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
         if (state.layer_enabled) {
-            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer(), true);
             return 0;
         }
 #endif
@@ -963,15 +968,15 @@ static int rgb_underglow_event_listener(const zmk_event_t *eh) {
 #endif
         uint8_t layer = rgb_underglow_top_layer();
         LOG_DBG("top layer: %d", layer);
-        zmk_rgb_underglow_set_layer(layer);
+        zmk_rgb_underglow_set_layer(layer, true);
         return 0;
     }
     if (as_zmk_underglow_color_changed(eh)) {
         const struct zmk_underglow_color_changed *ev = as_zmk_underglow_color_changed(eh);
-        LOG_DBG("refresh layer %d", ev->layers);
         uint8_t layer = rgb_underglow_top_layer();
+        LOG_DBG("refresh layers %d, current: %d, wakeup: %d", ev->layers, layer, ev->wakeup);
         if ((ev->layers & (BIT(layer))) == BIT(layer)) {
-            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer());
+            zmk_rgb_underglow_set_layer(rgb_underglow_top_layer(), ev->wakeup);
         }
         return 0;
     }
