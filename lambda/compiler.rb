@@ -18,13 +18,13 @@ class Compiler
     end
   end
 
-  def compile(board, keymap_data, lhs_kconfig_data, rhs_kconfig_data)
+  def compile(board, keymap_data, lhs_kconfig_data, rhs_kconfig_data, snippets)
     board_lh = board + '_lh'
     board_rh = board + '_rh'
 
-    if rhs_kconfig_data && !rhs_kconfig_data.empty?
-      lhs_result, lhs_output = compile_board(board_lh, keymap_data:,     kconfig_data: lhs_kconfig_data, include_static_rhs: false)
-      rhs_result, rhs_output = compile_board(board_rh, keymap_data: nil, kconfig_data: rhs_kconfig_data, include_static_rhs: false)
+    if rhs_kconfig_data || !snippets.empty?
+      lhs_result, lhs_output = compile_board(board_lh, keymap_data:,     kconfig_data: lhs_kconfig_data, snippets:, include_static_rhs: false)
+      rhs_result, rhs_output = compile_board(board_rh, keymap_data: nil, kconfig_data: rhs_kconfig_data, snippets:, include_static_rhs: false)
       [
         lhs_result.concat(rhs_result),
         ["LHS Output:", *lhs_output, "RHS Output:", *rhs_output],
@@ -34,12 +34,13 @@ class Compiler
     end
   end
 
-  def compile_board(board, keymap_data:, kconfig_data:, include_static_rhs: false)
+  def compile_board(board, keymap_data:, kconfig_data:, snippets: [], include_static_rhs: false)
     in_build_dir do
       compile_command = ['compileZmk', '-b', board]
 
       if keymap_data
         dts_parse_errors = validate_devicetree!(keymap_data)
+
         File.open('build.keymap', 'w') { |io| io.write(keymap_data) }
         compile_command << '-k' << './build.keymap'
       end
@@ -51,8 +52,12 @@ class Compiler
         # If requesting USB logging, include the corresponding snippet that also
         # enables necessary devicetree nodes
         if kconfig_data =~ /CONFIG_ZMK_USB_LOGGING\s*=\s*y/
-          compile_command << '-s' << 'zmk-usb-logging'
+          snippets += ['zmk-usb-logging']
         end
+      end
+
+      unless snippets.empty?
+        compile_command << '-s' << snippets.uniq.join(';')
       end
 
       if include_static_rhs
