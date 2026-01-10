@@ -40,7 +40,7 @@
             #binding-cells = <2>;
             flavor = "tap-preferred";
             tapping-term-ms = <200>;
-            bindings = <&mo>, <&rgb_ug_status_macro>;
+            bindings = <&mo>, <&kp>;
         };
 
         keypad_td: keypad_td {
@@ -84,12 +84,6 @@
     };
 
     macros {
-        rgb_ug_status_macro: rgb_ug_status_macro {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <&rgb_ug RGB_STATUS>;
-        };
-
         bt_select_0: bt_select_0 {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;

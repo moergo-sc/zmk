@@ -17,7 +17,6 @@
         zmk,underglow = &led_strip;
         zmk,backlight = &back_led_backlight;
         zmk,battery   = &vbatt;
-        zmk,underglow-indicators = &underglow_indicators;
     };
 
     back_led_backlight: pwmleds {
@@ -36,27 +35,6 @@
 
     vbatt: vbatt {
         compatible = "zmk,battery-nrf-vddh";
-    };
-
-    /*
-      Go60 LEDs
-      26 22 17 12  7  3
-      27 23 18 13  8  4
-      28 24 19 14  9  5
-      29 25 20 15 10  6
-            21 16 11   0 1 2
-    */
-    underglow_indicators: underglow-indicators {
-        compatible  = "zmk,underglow-indicators";
-        layer-state = <26 22 17 12 7 3>;
-        bat-lhs     = <27 23 18 13 8 4>;
-        bat-rhs     = <28 24 19 14 9 5>;
-        capslock    = <0>;
-        numlock     = <1>;
-        scrolllock  = <2>;
-        output-fallback = <11>;
-        ble-state   = <20 15 10 6>;
-        usb-state   = <21>;
     };
 
     go60_ext: connector {
