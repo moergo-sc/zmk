@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-ignored_modules=(hal_espressif sof tflite-micro thrift bsim babblesim babblesim_base \
+ignored_modules=(hal_espressif hal_rpi_pico sof tflite-micro thrift bsim babblesim babblesim_base \
                  babblesim_ext_2G4_libPhyComv1 babblesim_ext_2G4_channel_NtNcable \
                  babblesim_ext_2G4_channel_multiatt babblesim_ext_2G4_modem_magic \
                  babblesim_ext_2G4_modem_BLE_simple babblesim_ext_2G4_device_burst_interferer \
