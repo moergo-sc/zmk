@@ -5,6 +5,7 @@
 
 /dts-v1/;
 #include <nordic/nrf52840_qiaa.dtsi>
+#include <common/nordic/nrf52840_uf2_boot_mode.dtsi>
 
 #include <dt-bindings/zmk/matrix_transform.h>
 #include "go60-layouts.dtsi"
@@ -52,6 +53,14 @@
         dir-gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
         detect-gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>;
     };
+};
+
+&reg0 {
+    status = "okay";
+};
+
+&reg1 {
+    regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
 };
 
 &adc {
