@@ -47,7 +47,7 @@ let
   ]);
 
   requiredZephyrModules = [
-    "cmsis" "hal_nordic" "tinycrypt" "lvgl" "picolibc" "segger"
+    "cmsis" "hal_nordic" "tinycrypt" "lvgl" "picolibc" "segger" "mbedtls"
   ];
 
   # Some Zephyr modules seemingly need a symlink indirection (modulePath),
