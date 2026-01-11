@@ -192,25 +192,25 @@ let
     mkdir /tmp/build
     cd /tmp/build
 
-    compileZmk -b glove80_lh -k ${zmk.src}/app/boards/arm/glove80/glove80.keymap
+    compileZmk -b glove80_lh -k ${zmk.src}/app/boards/moergo/glove80/glove80.keymap
 
     rm -fr /tmp/build
     mkdir /tmp/build
     cd /tmp/build
 
-    compileZmk -b glove80_rh -k ${zmk.src}/app/boards/arm/glove80/glove80.keymap
+    compileZmk -b glove80_rh -k ${zmk.src}/app/boards/moergo/glove80/glove80.keymap
 
     rm -fr /tmp/build
     mkdir /tmp/build
     cd /tmp/build
 
-    compileZmk -b go60_lh -k ${zmk.src}/app/boards/arm/go60/go60.keymap
+    compileZmk -b go60_lh -k ${zmk.src}/app/boards/moergo/go60/go60.keymap
 
     rm -fr /tmp/build
     mkdir /tmp/build
     cd /tmp/build
 
-    compileZmk -b go60_rh -k ${zmk.src}/app/boards/arm/go60/go60.keymap
+    compileZmk -b go60_rh -k ${zmk.src}/app/boards/moergo/go60/go60.keymap
   '';
 
   entrypoint = pkgs.writeShellScriptBin "entrypoint" ''
