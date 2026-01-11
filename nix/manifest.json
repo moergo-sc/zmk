@@ -30,12 +30,6 @@
     "sha256": "0yspr4ia6hxa29dy0v86qc8j3nvvnx2xx5qzsmnidpx9s233bz09"
   },
   {
-    "name": "cirque-input-module",
-    "url": "https://github.com/petejohanson/cirque-input-module",
-    "revision": "0de55f36bc720b5be3d8880dc856d4d78baf5214",
-    "sha256": "1a2sngqmlk266x8lsjvr3wm3kv3fxn9885sx8sk3zskbvz3g5998"
-  },
-  {
     "name": "canopennode",
     "url": "https://github.com/zephyrproject-rtos/canopennode",
     "revision": "dec12fa3f0d790cafa8414a4c2930ea71ab72ffd",

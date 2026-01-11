@@ -47,13 +47,13 @@ let
   ]);
 
   requiredZephyrModules = [
-    "cmsis" "hal_nordic" "tinycrypt" "lvgl" "picolibc" "segger" "cirque-input-module"
+    "cmsis" "hal_nordic" "tinycrypt" "lvgl" "picolibc" "segger"
   ];
 
   # Some Zephyr modules seemingly need a symlink indirection (modulePath),
   # others don't (src).
   # This is not the best way to fix it, but it works around the problem.
-  directZephyrModules = [ "cirque-input-module" ];
+  directZephyrModules = [ ];
 
   zephyrModuleDeps =
     let modules = lib.attrVals requiredZephyrModules zephyr.modules;
