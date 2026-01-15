@@ -99,6 +99,7 @@ target_sources(app PRIVATE src/events/modifiers_state_changed.c)
 target_sources(app PRIVATE src/events/endpoint_changed.c)
 
 target_sources_ifdef(CONFIG_ZMK_SPLIT app PRIVATE src/events/split_peripheral_status_changed.c)
+target_sources_ifdef(CONFIG_ZMK_SPLIT app PRIVATE src/events/split_peripheral_layer_changed.c)
 add_subdirectory_ifdef(CONFIG_ZMK_SPLIT src/split)
 
 target_sources_ifdef(CONFIG_USB_DEVICE_STACK app PRIVATE src/usb.c)
