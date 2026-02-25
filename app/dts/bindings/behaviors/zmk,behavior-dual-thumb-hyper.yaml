@@ -1,0 +1,8 @@
+# Copyright (c) 2025 Seth Voltz
+# SPDX-License-Identifier: MIT
+
+description: Dual Thumb Hyper Behavior
+
+compatible: "zmk,behavior-dual-thumb-hyper"
+
+include: two_param.yaml
