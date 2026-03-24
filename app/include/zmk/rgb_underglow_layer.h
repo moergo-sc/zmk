@@ -29,3 +29,4 @@ const struct zmk_behavior_binding *rgb_underglow_get_bindings(uint8_t layer);
 
 uint8_t rgb_underglow_top_layer_with_state(uint32_t state_to_test);
 uint8_t rgb_underglow_top_layer(void);
+uint32_t rgb_underglow_layers_state(void);

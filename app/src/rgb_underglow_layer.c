@@ -64,6 +64,10 @@ const struct zmk_behavior_binding *rgb_underglow_get_bindings(uint8_t layer) {
     }
 }
 
+bool rgb_underglow_layer_active_with_state(uint8_t layer, uint32_t state_to_test) {
+    return (state_to_test & (BIT(layer))) == (BIT(layer));
+};
+
 uint8_t rgb_underglow_top_layer_with_state(uint32_t state_to_test) {
     for (uint8_t layer = ZMK_KEYMAP_LAYERS_LEN - 1; layer > 0; layer--) {
         if ((state_to_test & (BIT(layer))) == (BIT(layer)) || layer == 0) {
@@ -72,6 +76,14 @@ uint8_t rgb_underglow_top_layer_with_state(uint32_t state_to_test) {
     }
     // return default layer (0)
     return 0;
+}
+
+uint32_t rgb_underglow_layers_state(void) {
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+    return zmk_keymap_layer_state();
+#else
+    return peripheral_layers_state();
+#endif
 }
 
 uint8_t rgb_underglow_top_layer(void) {

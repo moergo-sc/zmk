@@ -515,13 +515,15 @@ static int rgb_settings_set(const char *name, size_t len, settings_read_cb read_
         rc = read_cb(cb_arg, &state, sizeof(state));
         if (rc >= 0) {
             if (state.on) {
-                k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
-            }
 #if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
-            if (state.layer_enabled) {
-                zmk_rgb_underglow_set_layer(rgb_underglow_top_layer(), true);
-            }
+                if (state.layer_enabled) {
+                    zmk_rgb_underglow_transient_on();
+                    zmk_rgb_underglow_set_layer(rgb_underglow_top_layer(), true);
+                }
+#else
+                k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
 #endif
+            }
             return 0;
         }
 
@@ -559,7 +561,8 @@ static int zmk_rgb_underglow_init(void) {
         animation_speed : CONFIG_ZMK_RGB_UNDERGLOW_SPD_START,
         current_effect : CONFIG_ZMK_RGB_UNDERGLOW_EFF_START,
         animation_step : 0,
-        on : IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_ON_START)
+        on : IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_ON_START),
+        layer_enabled : false
     };
 
 #if IS_ENABLED(CONFIG_SETTINGS)
@@ -599,6 +602,7 @@ int zmk_rgb_underglow_get_state(bool *on_off) {
 }
 
 void zmk_rgb_set_ext_power(void) {
+    LOG_DBG("setting ext power");
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
     if (ext_power == NULL)
         return;
@@ -633,12 +637,12 @@ void zmk_rgb_set_ext_power(void) {
 }
 
 int zmk_rgb_underglow_on(void) {
-    zmk_rgb_underglow_transient_on();
 #if IS_ENABLED(UNDERGLOW_LAYER_ENABLED)
     if (state.current_effect == UNDERGLOW_EFFECT_LAYER_INDICATORS) {
         state.layer_enabled = true;
     }
 #endif
+    zmk_rgb_underglow_transient_on();
     return zmk_rgb_underglow_save_state();
 }
 
@@ -649,9 +653,10 @@ int zmk_rgb_underglow_transient_on(void) {
     state.on = true;
     zmk_rgb_set_ext_power();
 
-    state.animation_step = 0;
-    k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(25));
-
+    if (!state.layer_enabled) {
+        state.animation_step = 0;
+        k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(25));
+    }
     return 0;
 }
 
@@ -723,8 +728,79 @@ static struct led_rgb hex_to_rgb(uint8_t r, uint8_t g, uint8_t b) {
     };
 }
 
+static int zmk_rgb_underglow_apply_merged_rgbmap() {
+    LOG_DBG("applying merged rgbmap");
+    int rc = 0;
+    size_t len = 0;
+    uint8_t active_layers[ZMK_KEYMAP_LAYERS_LEN];
+    uint32_t layer_state = rgb_underglow_layers_state();
+    LOG_DBG("layer state: %08x", layer_state);
+    for (uint8_t layer = ZMK_KEYMAP_LAYERS_LEN - 1; layer > 0; layer--) {
+        if ((layer_state & (BIT(layer))) == (BIT(layer)) || layer == 0) {
+            active_layers[len] = layer;
+            len++;
+            LOG_DBG("active layer: %d", layer);
+        }
+    }
+    active_layers[len++] = 0; // add default layer (0)
+    // fast track if no bindings on top layer
+    if (rgb_underglow_get_bindings(active_layers[0]) == NULL) {
+        LOG_DBG("no rgb bindings found for active layer: %d", active_layers[0]);
+        return 0;
+    }
+
+    for (int pixel = 0; pixel < STRIP_NUM_PIXELS; pixel++) {
+        uint8_t midx = rgb_pixel_lookup(pixel);
+        int color = 0;
+        if (midx >= ZMK_KEYMAP_LEN) {
+            LOG_DBG("out of range");
+        } else {
+
+            for (int layer = 0; layer < len; layer++) {
+                // LOG_DBG("getting rgb bindings for active layer: %d", active_layers[layer]);
+                const struct zmk_behavior_binding *bindings =
+                    rgb_underglow_get_bindings(active_layers[layer]);
+                if (bindings != NULL) {
+                    const struct device *dev =
+                        zmk_behavior_get_binding(bindings[midx].behavior_dev);
+                    if (dev != NULL) {
+                        const struct behavior_driver_api *api =
+                            (const struct behavior_driver_api *)dev->api;
+                        if (api->binding_pressed != NULL) {
+                            struct zmk_behavior_binding_event event = {.position = midx,
+                                                                       .layer =
+                                                                           active_layers[layer],
+                                                                       .timestamp = k_uptime_get()};
+
+                            color = api->binding_pressed(
+                                (struct zmk_behavior_binding *)&bindings[midx], event);
+                            if (color == ZMK_BEHAVIOR_TRANSPARENT) {
+                                color = 0;
+                                continue;
+                            }
+                        } // end if binding_pressed != NULL
+                    } // end if dev != NULL
+                } // end if bindings != NULL
+
+                break;
+            } // end for each active layer
+
+            // set pixel color
+            pixels[pixel] =
+                hex_to_rgb((color & 0xFF0000) >> 16, (color & 0xFF00) >> 8, color & 0xFF);
+
+            if (color > 0) {
+                rc = 1; // layer has at least one pixel up
+            }
+        } // end for each pixel
+    }
+    return rc;
+}
+
 static int zmk_rgb_underglow_apply_rgbmap(const struct zmk_behavior_binding *bindings,
                                           size_t rgbmap_len, uint8_t layer) {
+    LOG_DBG("applying rgbmap for layer: %d", layer);
+    return zmk_rgb_underglow_apply_merged_rgbmap();
     int rc = 0;
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         uint8_t midx = rgb_pixel_lookup(i);
@@ -764,8 +840,7 @@ static void zmk_rgb_underglow_set_layer(uint8_t layer, bool wakeup) {
     if (!state.layer_enabled)
         return;
 
-    const struct zmk_behavior_binding *rgbmap = rgb_underglow_get_bindings(layer);
-    if (rgbmap != NULL && zmk_rgb_underglow_apply_rgbmap(rgbmap, ZMK_KEYMAP_LEN, layer)) {
+    if (zmk_rgb_underglow_apply_merged_rgbmap()) {
         if (!state.on) {
             if (!wakeup) {
                 LOG_DBG("rgb off and no wakeup, abort refresh");
