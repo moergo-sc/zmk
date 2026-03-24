@@ -1,4 +1,4 @@
-name: Build Glove80 Firmware
+name: Build Firmware
 
 on:
   push:
@@ -20,8 +20,13 @@ on:
 
 jobs:
   build:
-    name: Build Glove80 Firmware
+    name: Build Firmware
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board:
+          - glove80
+          - go60
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v27
@@ -32,15 +37,15 @@ jobs:
           name: moergo-glove80-zmk-dev
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           skipPush: "${{ github.repository != 'moergo-sc/zmk' }}"
-      - name: Build Glove80 combined firmware
-        run: nix-build -A glove80_combined -o combined
+      - name: Build ${{ matrix.board }} combined firmware
+        run: nix-build -A ${{matrix.board}}_combined -o combined
       - name: Copy result out of nix store
-        run: cp combined/glove80.uf2 glove80.uf2
+        run: cp combined/${{matrix.board}}.uf2 ${{matrix.board}}.uf2
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:
-          name: glove80.uf2
-          path: glove80.uf2
+          name: ${{matrix.board}}.uf2
+          path: ${{matrix.board}}.uf2
   release:
     name: Create Release for Tag
     if: >-
@@ -50,13 +55,17 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download compiled firmware artifact
+      - name: Download Glove80 firmware artifact
         uses: actions/download-artifact@v4
         with:
           name: glove80.uf2
+      - name: Download Go60 firmware artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: go60.uf2
       - name: Create Release for Tag
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "glove80.uf2"
+          artifacts: "glove80.uf2,go60.uf2"
           artifactErrorsFailBuild: true
           generateReleaseNotes: true

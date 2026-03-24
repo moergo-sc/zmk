@@ -1,0 +1,8 @@
+name: cirque-lh-sensitivity-low
+boards:
+  go60_lh:
+    append:
+      EXTRA_DTC_OVERLAY_FILE: cirque-lh-sensitivity.overlay
+  glove80_lh:
+    append:
+      EXTRA_DTC_OVERLAY_FILE: cirque-lh-sensitivity.overlay

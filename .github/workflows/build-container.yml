@@ -99,6 +99,7 @@ jobs:
             --arg branch       "$VERSION_BRANCH" \
             --arg digest       "$digest" \
             --arg api_version  "$api_version" \
+            --argjson boards   '["glove80", "go60"]' \
             > "/tmp/$VERSION_NAME.json"
       - name: Upload image metadata file to versions bucket
         run: aws s3 cp "/tmp/$VERSION_NAME.json" "s3://$VERSIONS_BUCKET/images/$VERSION_NAME.json"

@@ -3,60 +3,61 @@
 require 'stringio'
 require 'digest'
 require 'json'
+require './param_parser'
+require './param_serializer'
 require './compiler'
 
 module LambdaFunction
   # Handle a non-HTTP compile request, returning a JSON body of either the
   # compiled result or an error.
   class Handler
+    include ParamParser
+
     REVISION = ENV.fetch('REVISION', 'unknown')
 
     def self.process(event:, context:)
       return { type: 'keep_alive' } if event.has_key?('keep_alive')
 
-      parse_base64_param = ->(param, required: true) do
-        if event.include?(param)
-          Base64.strict_decode64(event.fetch(param))
-        elsif required
-          return error(status: 400, message: "Missing required argument: #{param}")
-        end
-      rescue ArgumentError
-        return error(status: 400, message: "Invalid Base64 in #{param} input")
-      end
+      self.new(event).process
+    end
 
-      board = event.fetch('board', 'glove80')
-      keymap_data  = parse_base64_param.('keymap')
-      kconfig_data = parse_base64_param.('kconfig', required: false)
+    attr_reader :params
+    def initialize(event)
+      @params = event
+    end
 
-      # Including kconfig settings that affect the RHS require building both
-      # firmware images, doubling compile time. Clients should omit rhs_kconfig
-      # where possible.
-      rhs_kconfig_data = parse_base64_param.('rhs_kconfig', required: false)
+    def process
+      board             = parse_param('board', with: ParamSerializer::String, default: 'glove80')
+      keymap_data       = parse_param('keymap', with: ParamSerializer::Base64)
+      snippets          = parse_array_param('snippets', with: ParamSerializer::String, default: [])
+      lhs_kconfig_data  = parse_param('kconfig', with: ParamSerializer::Base64, default: nil)
+      rhs_kconfig_data  = parse_param('rhs_kconfig', with: ParamSerializer::Base64, default: nil)
 
       result, log =
         begin
-          log_compile(board, keymap_data, kconfig_data, rhs_kconfig_data)
-
-          Compiler.new.compile(board, keymap_data, kconfig_data, rhs_kconfig_data)
+          log_compile(board, keymap_data, lhs_kconfig_data, rhs_kconfig_data, snippets)
+          Compiler.new.compile(board, keymap_data, lhs_kconfig_data, rhs_kconfig_data, snippets)
         rescue Compiler::CompileError => e
-          return error(status: e.status, message: e.message, detail: e.log)
+          return error(status: e.status, message: e.message, detail: e.log, exception: e)
         end
 
       result = Base64.strict_encode64(result)
 
       { type: 'result', result: result, log: log, revision: REVISION }
+    rescue ParamParser::ParseError => e
+      error(status: 400, message: "Error parsing #{e.param}", detail: [e.message], exception: e)
     rescue StandardError => e
       error(status: 500, message: "Unexpected error: #{e.class}", detail: [e.message], exception: e)
     end
 
-    def self.log_compile(board, keymap_data, kconfig_data, rhs_kconfig_data)
+    def log_compile(board, keymap_data, kconfig_data, rhs_kconfig_data, snippets)
       keymap      = Digest::SHA1.base64digest(keymap_data)
       kconfig     = kconfig_data ? Digest::SHA1.base64digest(kconfig_data) : 'nil'
       rhs_kconfig = rhs_kconfig_data ? Digest::SHA1.base64digest(rhs_kconfig_data) : 'nil'
-      puts("Compiling with board: #{board}; keymap: #{keymap}; kconfig: #{kconfig}; rhs_kconfig: #{rhs_kconfig}")
+      puts("Compiling with board: #{board}; keymap: #{keymap}; kconfig: #{kconfig}; rhs_kconfig: #{rhs_kconfig}; snippets: #{snippets.inspect}")
     end
 
-    def self.error(status:, message:, detail: nil, exception: nil)
+    def error(status:, message:, detail: nil, exception: nil)
       reported_error = { type: 'error', status:, message:, detail:, revision: REVISION }
 
       exception_detail = { class: exception.class, backtrace: exception.backtrace } if exception
