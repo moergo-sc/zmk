@@ -153,6 +153,14 @@ int zmk_split_central_update_hid_indicator(zmk_hid_indicators_t indicators) {
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING)
 
 int zmk_split_central_get_peripheral_battery_level(uint8_t source, uint8_t *level) {
+    if (!active_transport || !active_transport->api) {
+        return -ENODEV;
+    }
+    if (active_transport->api->get_status &&
+        active_transport->api->get_status().connections !=
+            ZMK_SPLIT_TRANSPORT_CONNECTIONS_STATUS_ALL_CONNECTED) {
+        return -ENOTCONN;
+    }
     if (source >= ARRAY_SIZE(peripheral_battery_levels)) {
         return -EINVAL;
     }

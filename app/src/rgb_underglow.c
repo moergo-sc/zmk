@@ -344,7 +344,7 @@ static int zmk_led_generate_status(void) {
     if (rc == 0) {
         zmk_led_battery_level(peripheral_level, underglow_bat_rhs,
                               DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_rhs));
-    } else if (rc == -ENOTCONN) {
+    } else if (rc == -ENODEV || rc == -ENOTCONN) {
         zmk_led_fill(red, underglow_bat_rhs, DT_PROP_LEN(UNDERGLOW_INDICATORS, bat_rhs));
     } else if (rc == -EINVAL) {
         LOG_ERR("Invalid peripheral index requested for battery level read: 0");
