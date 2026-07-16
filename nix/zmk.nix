@@ -44,10 +44,15 @@ let
 
     # TODO: this was required but not in shell.nix
     pykwalify
+
+    # Required by the nanopb generator for ZMK Studio proto messages
+    setuptools
+    protobuf
+    grpcio-tools
   ]);
 
   requiredZephyrModules = [
-    "cmsis" "hal_nordic" "tinycrypt" "lvgl" "picolibc" "segger" "cirque-input-module"
+    "cmsis" "hal_nordic" "tinycrypt" "lvgl" "picolibc" "segger" "cirque-input-module" "nanopb" "zmk-studio-messages"
   ];
 
   # Some Zephyr modules seemingly need a symlink indirection (modulePath),
