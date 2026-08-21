@@ -13,21 +13,11 @@
 let
   # from zephyr/scripts/requirements-base.txt
   packageOverrides = pyself: pysuper: {
-    can = pysuper.can.overrideAttrs (_: {
+    python-can = pysuper.python-can.overrideAttrs (_: {
       # horribly flaky test suite full of assertions about timing.
       # >       assert 0.1 <= took < inc(0.3)
       # E       assert 0.31151700019836426 < 0.3
       # E        +  where 0.3 = inc(0.3)
-      doCheck = false;
-      doInstallCheck = false;
-    });
-
-    canopen = pysuper.can.overrideAttrs (_: {
-      # Also has timing sensitive tests
-      #         task = self.network.send_periodic(0x123, [1, 2, 3], 0.01)
-      #         time.sleep(0.1)
-      # >       self.assertTrue(9 <= bus.queue.qsize() <= 11)
-      # E       AssertionError: False is not true
       doCheck = false;
       doInstallCheck = false;
     });
@@ -36,7 +26,7 @@ let
   python = (buildPackages.python3.override { inherit packageOverrides; }).withPackages (ps: with ps; [
     pyelftools
     pyyaml
-    canopen
+    python-can
     packaging
     progress
     anytree
