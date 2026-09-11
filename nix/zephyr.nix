@@ -35,6 +35,11 @@ stdenvNoCC.mkDerivation {
   name = "zephyr";
   src = modules.zephyr.src;
 
+  # Backport of the zephyrproject-rtos/zephyr#82130 input_report() guard that
+  # refuses to block in the system workqueue, extended to also refuse to block
+  # in the input thread.
+  patches = [ ./input-report-no-block.patch ];
+
   dontBuild = true;
 
   # This awkward structure is required by
