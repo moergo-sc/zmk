@@ -1,0 +1,70 @@
+This is a backport of zephyrproject-rtos/zephyr#82130, with the addition that we
+also refuse to block when in the input thread, to guard against a self-deadlock
+if an input handler attempts to enqueue input when input_msgq is full.
+
+In ZMK, the self-deadlock is reachable when an input processor invokes a
+behavior that calls input_report, such as mouse key press, and the system
+workqueue deadlock is reachable on a split peripheral when input_report is
+called from the system thread and bt_gatt_notify is called from the input
+thread.
+---
+ subsys/input/input.c | 29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/subsys/input/input.c b/subsys/input/input.c
+index 5e9f45d8de7..93149965bea 100644
+--- a/subsys/input/input.c
++++ b/subsys/input/input.c
+@@ -16,6 +16,11 @@ LOG_MODULE_REGISTER(input, CONFIG_INPUT_LOG_LEVEL);
+ K_MSGQ_DEFINE(input_msgq, sizeof(struct input_event),
+ 	      CONFIG_INPUT_QUEUE_MAX_MSGS, 4);
+ 
++/* Initialized once the input thread is running, so that input_report()
++ * can recognise calls made from the input thread itself.
++ */
++static k_tid_t input_thread_tid = NULL;
++
+ #endif
+ 
+ static void input_process(struct input_event *evt)
+@@ -50,7 +55,27 @@ int input_report(const struct device *dev,
+ 	};
+ 
+ #ifdef CONFIG_INPUT_MODE_THREAD
+-	return k_msgq_put(&input_msgq, &evt, timeout);
++	int ret;
++
++	if (!K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
++		k_tid_t current = k_current_get();
++
++		/* Backported from #82130 */
++		if (current == k_work_queue_thread_get(&k_sys_work_q) ||
++		    current == input_thread_tid) {
++			LOG_DBG("Timeout discarded. No blocking in the system "
++				"workqueue or the input thread.");
++			timeout = K_NO_WAIT;
++		}
++	}
++
++	ret = k_msgq_put(&input_msgq, &evt, timeout);
++	if (ret < 0) {
++		LOG_WRN("Event dropped, queue full.");
++		return ret;
++	}
++
++	return 0;
+ #else
+ 	input_process(&evt);
+ 	return 0;
+@@ -64,6 +89,8 @@ static void input_thread(void)
+ 	struct input_event evt;
+ 	int ret;
+ 
++	input_thread_tid = k_current_get();
++
+ 	while (true) {
+ 		ret = k_msgq_get(&input_msgq, &evt, K_FOREVER);
+ 		if (ret) {
+-- 
+2.55.0
+
