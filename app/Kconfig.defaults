@@ -58,6 +58,9 @@ config ZMK_RGB_UNDERGLOW_BRT_MIN
 config ZMK_RGB_UNDERGLOW_BRT_MAX
     default 100
 
+config ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED
+    default 0
+
 config ZMK_RGB_UNDERGLOW_HUE_STEP
     default 10
 

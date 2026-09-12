@@ -72,10 +72,16 @@ CONFIG_ZMK_RGB_UNDERGLOW_ON_START=n
 CONFIG_ZMK_RGB_UNDERGLOW_BRT_STEP=2
 CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN=2
 
-# DO NOT CHANGE CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX TO ABOVE 40. Configuring
-# BRT_MAX above 40% can draw more than 500mA current, which can potentially
-# damage some computers. WARRANTY IS VOID IF BRT_MAX SET ABOVE 40.
+#### MAXIMUM BRIGHTNESS VALUES ####
+# * ZMK_RGB_UNDERGLOW_BRT_MAX: 40
+# * ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED: 34
+# Configuring BRT_MAX above 40% can cause the keyboard to draw more
+# current than the USB spec allows, which can potentially damage some
+# computers. Configuring BRT_MAX_WIRED above 34% can cause the right
+# hand board to draw more current than the TRRS power supply permits.
+# WARRANTY IS VOID IF THESE LIMITS ARE EXCEEDED.
 CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX=40
+CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED=34
 
 CONFIG_ZMK_RGB_UNDERGLOW_EFF_START=3
 CONFIG_ZMK_RGB_UNDERGLOW_HUE_START=285

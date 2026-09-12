@@ -23,6 +23,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/stdlib.h>
 #include <zmk/behavior.h>
 #include <zmk/sensors.h>
+#include <zmk/split/central.h>
 #include <zmk/split/transport/central.h>
 #include <zmk/event_manager.h>
 #include <zmk/events/position_state_changed.h>
@@ -450,6 +451,10 @@ static const struct zmk_split_transport_central_api central_api = {
 };
 
 ZMK_SPLIT_TRANSPORT_CENTRAL_REGISTER(wired_central, &central_api, CONFIG_ZMK_SPLIT_WIRED_PRIORITY);
+
+bool zmk_split_wired_is_selected(void) {
+    return zmk_split_central_get_active_transport() == &wired_central;
+}
 
 #if HAS_DETECT_GPIO
 
