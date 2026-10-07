@@ -97,6 +97,13 @@ CONFIG_ZMK_HID_CONSUMER_REPORT_USAGES_BASIC=y
 
 # Enable USB boot protocol support
 CONFIG_ZMK_USB_BOOT=y
+
+# USB boot protocol support selects USB_DEVICE_SOF, so the nRF USB driver queues
+# an event every millisecond. With the default 32-entry queue it overflows about
+# a second after boot whenever the cable is attached (while BLE connects to the
+# host), and the driver's queue-overflow reinit leaves the device off the bus
+# until the cable is replugged. 64 is the maximum.
+CONFIG_USB_NRFX_EVT_QUEUE_SIZE=64
 CONFIG_ZMK_HID_INDICATORS=y
 
 # Turn on debugging to disable optimization. Debug messages can result in larger
