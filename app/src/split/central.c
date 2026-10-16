@@ -171,6 +171,10 @@ int zmk_split_central_get_peripheral_battery_level(uint8_t source, uint8_t *leve
 
 #endif // IS_ENABLED(CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING)
 
+const struct zmk_split_transport_central *zmk_split_central_get_active_transport(void) {
+    return active_transport;
+}
+
 static int select_first_available_transport(void) {
     // Transports are sorted by priority, so find the first
     // One that's available, and enable it. Any transport that

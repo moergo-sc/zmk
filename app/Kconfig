@@ -303,6 +303,15 @@ config ZMK_RGB_UNDERGLOW_BRT_MAX
     int "RGB underglow maximum brightness in percent"
     range ZMK_RGB_UNDERGLOW_BRT_MIN 100
 
+config ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED
+    int "RGB underglow maximum brightness in percent when wired split is in use"
+    depends on ZMK_SPLIT_WIRED
+    range 0 100
+    help
+      Replaces ZMK_RGB_UNDERGLOW_BRT_MAX while the wired transport is selected,
+      for boards that power the peripheral over the split cable. Set to 0 to
+      disable.
+
 config ZMK_RGB_UNDERGLOW_HUE_STEP
     int "RGB underglow hue step in degrees"
     range 0 359

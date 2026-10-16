@@ -36,6 +36,18 @@
 #include <zmk/split/central.h>
 #endif
 
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_WIRED) && CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED > 0 &&            \
+    CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED < CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#include <zmk/split/central.h>
+#else
+#include <zmk/split/peripheral.h>
+#endif
+
+BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED >= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN,
+             "ERROR: RGB underglow wired maximum brightness is less than minimum brightness");
+#endif
+
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #if !DT_HAS_CHOSEN(zmk_underglow)
@@ -85,14 +97,31 @@ static const struct device *const ext_power = DEVICE_DT_GET(DT_INST(0, zmk_ext_p
 
 void zmk_rgb_set_ext_power(void);
 
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_WIRED) && CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED > 0 &&            \
+    CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED < CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX
+static uint8_t effective_brt_max = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX;
+
+// Sampled once per frame so brightness cannot change part way through one.
+static void zmk_led_update_brt_max(void) {
+    effective_brt_max = zmk_split_wired_is_selected() ? CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED
+                                                      : CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX;
+}
+
+#else
+
+static const uint8_t effective_brt_max = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX;
+#define zmk_led_update_brt_max() ((void)0)
+
+#endif // IS_ENABLED(CONFIG_ZMK_SPLIT_WIRED) && CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX_WIRED
+
 static struct zmk_led_hsb hsb_scale_min_max(struct zmk_led_hsb hsb) {
     hsb.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN +
-            (CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX - CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN) * hsb.b / BRT_MAX;
+            (effective_brt_max - CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN) * hsb.b / BRT_MAX;
     return hsb;
 }
 
 static struct zmk_led_hsb hsb_scale_zero_max(struct zmk_led_hsb hsb) {
-    hsb.b = hsb.b * CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX / BRT_MAX;
+    hsb.b = hsb.b * effective_brt_max / BRT_MAX;
     return hsb;
 }
 
@@ -420,6 +449,8 @@ static int zmk_led_generate_status(void) {
 #endif // underglow_indicators exists
 
 static void zmk_rgb_underglow_tick(struct k_work *work) {
+    zmk_led_update_brt_max();
+
     switch (state.current_effect) {
     case UNDERGLOW_EFFECT_SOLID:
         zmk_rgb_underglow_effect_solid();

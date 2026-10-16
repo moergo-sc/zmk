@@ -23,6 +23,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/stdlib.h>
 #include <zmk/behavior.h>
 #include <zmk/sensors.h>
+#include <zmk/split/peripheral.h>
 #include <zmk/split/transport/peripheral.h>
 #include <zmk/split/transport/types.h>
 #include <zmk/event_manager.h>
@@ -408,6 +409,10 @@ static const struct zmk_split_transport_peripheral_api peripheral_api = {
 
 ZMK_SPLIT_TRANSPORT_PERIPHERAL_REGISTER(wired_peripheral, &peripheral_api,
                                         CONFIG_ZMK_SPLIT_WIRED_PRIORITY);
+
+bool zmk_split_wired_is_selected(void) {
+    return zmk_split_peripheral_get_active_transport() == &wired_peripheral;
+}
 
 #if HAS_DETECT_GPIO
 
