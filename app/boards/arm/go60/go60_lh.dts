@@ -20,6 +20,14 @@
         zmk,underglow-indicators = &underglow_indicators;
     };
 
+    underglow-layer {
+        compatible  = "zmk,underglow-layer";
+        pixel-lookup =
+          <54>, <55>, <56>, <5>, <17>, <29>, <41>, <4>, <16>, <28>,
+          <40>, <50>, <3>, <15>, <27>, <39>, <49>, <2>, <14>, <26>,
+          <38>, <48>, <1>, <13>, <25>, <37>, <0>, <12>, <24>, <36>;
+    };
+
     back_led_backlight: pwmleds {
         compatible = "pwm-leds";
         pwm_led_0 {
