@@ -9,6 +9,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/pm/device.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/sys/atomic.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -63,9 +64,18 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define STATUS_FADE_OUT_STEPS (STATUS_FADE_OUT_MILLIS / FRAME_MILLIS)
 #define STATUS_FADE_OUT_START (STATUS_DWELL_STEPS - STATUS_FADE_OUT_STEPS)
 
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
 // Below the low battery threshold, underglow is suppressed
 #define LOW_BATTERY_THRESHOLD 10
 #define LOW_BATTERY_HYSTERESIS 2
+
+// Emit a warning on attempting to enable underglow when suppressed by low battery.
+// The warning animation is three short, dim red pulses.
+#define LOW_BATTERY_WARNING_FADE_MILLIS 100
+#define LOW_BATTERY_WARNING_PULSE_MILLIS 400
+#define LOW_BATTERY_WARNING_DURATION_MILLIS (3 * LOW_BATTERY_WARNING_PULSE_MILLIS)
+#define LOW_BATTERY_WARNING_BRT 10
+#endif
 
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
              "ERROR: RGB underglow maximum brightness is less than minimum brightness");
@@ -114,6 +124,10 @@ enum rgb_inhibit {
 };
 
 static atomic_t inhibit;
+
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+static atomic_t low_battery_warning_requested;
+#endif
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
 static const struct device *const ext_power = DEVICE_DT_GET(DT_INST(0, zmk_ext_power_generic));
@@ -225,6 +239,38 @@ static void zmk_rgb_underglow_effect_swirl(void) {
     state.animation_step += state.animation_speed * 2;
     state.animation_step = state.animation_step % HUE_MAX;
 }
+
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+static bool zmk_rgb_underglow_update_low_battery_warning(int64_t *elapsed) {
+    static int64_t started_at = -1;
+
+    // Automatic recovery and settings restoration must not start a warning.
+    bool requested = atomic_set(&low_battery_warning_requested, 0);
+    int64_t now = k_uptime_get();
+    if (!state.on || !atomic_test_bit(&inhibit, RGB_INHIBIT_LOW_BATTERY)) {
+        started_at = -1;
+    } else if (requested && started_at < 0) {
+        started_at = now;
+    }
+    *elapsed = now - started_at;
+    if (*elapsed >= LOW_BATTERY_WARNING_DURATION_MILLIS) {
+        started_at = -1;
+    }
+    return started_at >= 0;
+}
+
+static void zmk_rgb_underglow_low_battery_warning(int64_t elapsed) {
+    int phase = elapsed % LOW_BATTERY_WARNING_PULSE_MILLIS;
+    int brightness =
+        MAX(0, LOW_BATTERY_WARNING_FADE_MILLIS - abs(phase - LOW_BATTERY_WARNING_FADE_MILLIS));
+    int peak = 255 * MIN(LOW_BATTERY_WARNING_BRT, CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX) / BRT_MAX;
+    struct led_rgb color = {.r = peak * brightness / LOW_BATTERY_WARNING_FADE_MILLIS};
+
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        pixels[i] = color;
+    }
+}
+#endif
 
 static int zmk_led_generate_status(void);
 
@@ -462,6 +508,7 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         status_state.active = elapsed < STATUS_DWELL_MILLIS;
     }
 
+    bool warning_active = false;
 #if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
     uint8_t state_of_charge = zmk_battery_state_of_charge();
 
@@ -470,10 +517,15 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
     } else if (state_of_charge >= LOW_BATTERY_THRESHOLD + LOW_BATTERY_HYSTERESIS) {
         atomic_clear_bit(&inhibit, RGB_INHIBIT_LOW_BATTERY);
     }
+
+    // If the underglow is inhibited by low battery but the user tried to
+    // re-enable it, display a warning.
+    int64_t warning_elapsed;
+    warning_active = zmk_rgb_underglow_update_low_battery_warning(&warning_elapsed);
 #endif
 
     bool underglow_active = state.on && atomic_get(&inhibit) == 0;
-    bool leds_active = underglow_active || status_state.active;
+    bool leds_active = underglow_active || warning_active || status_state.active;
 
     static bool pixels_dirty = false;
     if (underglow_active) {
@@ -492,6 +544,11 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
             break;
         }
         pixels_dirty = true;
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+    } else if (warning_active) {
+        zmk_rgb_underglow_low_battery_warning(warning_elapsed);
+        pixels_dirty = true;
+#endif
     } else if (pixels_dirty) {
         memset(pixels, 0, sizeof(struct led_rgb) * STRIP_NUM_PIXELS);
         pixels_dirty = false;
@@ -574,6 +631,9 @@ static void zmk_rgb_underglow_sleep(void) {
     atomic_set_bit(&inhibit, RGB_INHIBIT_SLEEP);
     k_work_cancel_sync(&underglow_tick_work, &sync);
 
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+    atomic_clear(&low_battery_warning_requested);
+#endif
     zmk_rgb_underglow_update_timer(false);
     zmk_rgb_set_ext_power(false);
 }
@@ -757,7 +817,15 @@ int zmk_rgb_underglow_on(void) {
     if (!led_strip)
         return -ENODEV;
 
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+    bool was_on = state.on;
+#endif
     state.on = true;
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+    if (!was_on) {
+        atomic_set(&low_battery_warning_requested, 1);
+    }
+#endif
     // Turning underglow on manually overrides USB auto-off until the next USB change.
     atomic_clear_bit(&inhibit, RGB_INHIBIT_USB);
 
@@ -772,6 +840,9 @@ int zmk_rgb_underglow_off(void) {
         return -ENODEV;
 
     state.on = false;
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+    atomic_clear(&low_battery_warning_requested);
+#endif
     k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &underglow_tick_work);
 
     return zmk_rgb_underglow_save_state();
