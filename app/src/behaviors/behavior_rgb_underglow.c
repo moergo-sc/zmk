@@ -136,14 +136,14 @@ on_keymap_binding_convert_central_state_dependent_params(struct zmk_behavior_bin
                                                          struct zmk_behavior_binding_event event) {
     switch (binding->param1) {
     case RGB_TOG_CMD: {
-        bool state;
-        int err = zmk_rgb_underglow_get_state(&state);
+        bool turn_on;
+        int err = zmk_rgb_underglow_calc_toggle(&turn_on);
         if (err) {
-            LOG_ERR("Failed to get RGB underglow state (err %d)", err);
+            LOG_ERR("Failed to calculate RGB underglow toggle (err %d)", err);
             return err;
         }
 
-        binding->param1 = state ? RGB_OFF_CMD : RGB_ON_CMD;
+        binding->param1 = turn_on ? RGB_ON_CMD : RGB_OFF_CMD;
         break;
     }
     case RGB_BRI_CMD: {
